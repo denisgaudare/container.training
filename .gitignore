@@ -1,0 +1,34 @@
+*.pyc
+*.swp
+*~
+
+prepare-vms/tags
+prepare-vms/infra
+prepare-vms/www
+
+prepare-tf/.terraform*
+prepare-tf/terraform.*
+prepare-tf/stage2/*.tf
+prepare-tf/stage2/kubeconfig.*
+prepare-tf/stage2/.terraform*
+prepare-tf/stage2/terraform.*
+prepare-tf/stage2/externalips.*
+
+slides/*.yml.html
+slides/autopilot/state.yaml
+slides/index.html
+slides/past.html
+slides/slides.zip
+node_modules
+
+### macOS ###
+# General
+.DS_Store
+.AppleDouble
+.LSOverride
+
+### Windows ###
+# Windows thumbnail cache files
+Thumbs.db
+ehthumbs.db
+ehthumbs_vista.db

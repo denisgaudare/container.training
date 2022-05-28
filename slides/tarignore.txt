@@ -1,0 +1,8 @@
+*.yml
+*.tgz
+*.zip
+*.yaml
+*.py
+*.md
+requirements.txt
+
