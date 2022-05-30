@@ -1,0 +1,5655 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Packaging d'applications et CI/CD pour Kubernetes </title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <link rel="stylesheet" href="workshop.css">
+  </head>
+  <body>
+    <!--
+    <div style="position: absolute; left: 20%; right: 20%; top: 30%;">
+      <h1 style="font-size: 3em;">Loading ...</h1>
+      The slides should show up here. If they don't, it might be
+      because you are accessing this file directly from your filesystem.
+      It needs to be served from a web server. You can try this:
+      <pre>
+        docker-compose up -d
+        open http://localhost:8888/workshop.html # on MacOS
+        xdg-open http://localhost:8888/workshop.html # on Linux
+      </pre>
+      Once the slides are loaded, this notice disappears when you
+      go full screen (e.g. by hitting "f").
+    </div>
+    -->
+    <textarea id="source">class: title, self-paced
+
+Packaging d'applications<br/>et CI/CD pour Kubernetes<br/>
+
+.nav[*Self-paced version*]
+
+.debug[
+```
+
+```
+
+These slides have been built from commit: 7b841db
+
+
+[shared/title.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/shared/title.md)]
+---
+
+class: title, in-person
+
+Packaging d'applications<br/>et CI/CD pour Kubernetes<br/><br/></br>
+
+
+<!--
+WiFi: **Something**<br/>
+Password: **Something**
+
+**Be kind to the WiFi!**<br/>
+*Use the 4G or 5G network.*
+*Don't use your hotspot.*<br/>
+*Don't stream videos or download big files during the workshop*<br/>
+*Thank you!*
+-->
+
+.debug[[shared/title.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/shared/title.md)]
+---
+## A brief introduction
+
+- We are a collectif of professionals and instructors interested in leading workshops and tutorials
+  
+- Credit is to be shared among various fellow specialists, info found in books, articles on the Internet, and thanks to (long) hours of work.
+
+- The slides are also to be used along, on your own, at your own pace
+
+- Are included in these slides, as much information as possible
+
+- It is recommend having a mentor to help you ...
+
+- ... Or be comfortable spending some time reading the Kubernetes [documentation](https://kubernetes.io/docs/) ...
+
+- ... And looking for answers on [StackOverflow](http://stackoverflow.com/questions/tagged/kubernetes) and other outlets
+
+- ... and myself [Denis Gaudaré](mailto:denisgaudare@gmail.com)
+
+.debug[[k8s/intro.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/intro.md)]
+---
+
+class: self-paced
+
+## Hands on, you shall practice
+
+- Nobody ever became a Jedi by spending their lives reading Wookiepedia
+
+- Likewise, it will take more than merely *reading* these slides
+  to make you an expert
+
+- These slides include *tons* of demos, exercises, and examples
+
+- They assume that you have access to a Kubernetes cluster
+
+- If you are attending a workshop or tutorial:
+  <br/>you will be given specific instructions to access your cluster
+
+- If you are doing this on your own:
+  <br/>the first chapter will give you various options to get your own cluster
+
+.debug[[k8s/intro.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/intro.md)]
+---
+## Accessing these slides now
+
+- We recommend that you open these slides in your browser:
+
+  github.com/denisgaudare/container.training/slides
+
+- Use arrows to move to next/previous slide
+
+  (up, down, left, right, page up, page down)
+
+- Type a slide number + ENTER to go to that slide
+
+- The slide number is also visible in the URL bar
+
+  (e.g. .../#123 for slide 123)
+
+<!--
+.lab[
+```open https://github.com/denisgaudare/container.training/tree/master/slides/common/about-slides.md```
+]
+-->
+
+.debug[[shared/about-slides.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/shared/about-slides.md)]
+---
+
+## These slides are not perfect
+
+- You are welcome to comment, check these slides
+
+- These slides are written with great care
+
+- The content of these slides is regularly checked, but ...
+
+- Typos? Mistakes? Questions? Feel free to tell ...
+
+
+<!--
+.lab[
+```open https://github.com/denisgaudare/container.training/tree/master/slides/common/about-slides.md```
+]
+-->
+
+.debug[[shared/about-slides.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/shared/about-slides.md)]
+---
+
+class: extra-details
+
+## Extra details
+
+- This slide has a little magnifying glass in the top left corner
+
+- This magnifying glass indicates slides that provide extra details
+
+- Feel free to skip them if:
+
+  - you are in a hurry
+
+  - you are new to this and want to avoid cognitive overload
+
+  - you want only the most essential information
+
+- You can review these slides another time if you want, they'll be waiting for you ☺
+
+.debug[[shared/about-slides.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/shared/about-slides.md)]
+---
+
+class: pic
+
+.interstitial[![Image separating from the next part](https://gallant-turing-d0d520.netlify.com/containers/Container-Ship-Freighter-Navigation-Elbe-Romance-1782991.jpg)]
+
+---
+
+name: toc-pre-requirements
+class: title
+
+ Pre-requirements
+
+.nav[
+[Previous part](#toc-)
+|
+[Back to table of contents](#toc-part-1)
+|
+[Next part](#toc-kustomize)
+]
+
+.debug[(automatically generated title slide)]
+
+---
+# Pre-requirements
+
+- Be comfortable with the UNIX command line
+
+  - navigating directories
+
+  - editing files
+
+  - a little bit of bash-fu (environment variables, loops)
+
+- Some Docker knowledge
+
+  - `docker run`, `docker ps`, `docker build`
+
+  - ideally, you know how to write a Dockerfile and build it
+    <br/>
+    (even if it's a `FROM` line and a couple of `RUN` commands)
+
+- It's totally OK if you are not a Docker expert!
+
+.debug[[shared/prereqs.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/shared/prereqs.md)]
+---
+
+class: title
+
+*Tell me and I forget.*
+<br/>
+*Teach me and I remember.*
+<br/>
+*Involve me and I learn.*
+
+Misattributed to Benjamin Franklin
+
+[(Probably inspired by Chinese Confucian philosopher Xunzi)](https://www.barrypopik.com/index.php/new_york_city/entry/tell_me_and_i_forget_teach_me_and_i_may_remember_involve_me_and_i_will_lear/)
+
+.debug[[shared/prereqs.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/shared/prereqs.md)]
+---
+
+## Hands-on sections
+
+- The whole workshop is hands-on
+
+- We are going to build, ship, and run containers!
+
+- You are invited to reproduce all the demos
+
+- All hands-on sections are clearly identified, like the gray rectangle below
+
+.lab[
+
+- This is the stuff you're supposed to do!
+
+- Go to github.com/denisgaudare/container.training/slides to view these slides
+
+<!-- ```open github.com/denisgaudare/container.training/slides``` -->
+
+]
+
+.debug[[shared/prereqs.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/shared/prereqs.md)]
+---
+
+class: in-person
+
+## Where are we going to run our containers?
+
+.debug[[shared/prereqs.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/shared/prereqs.md)]
+---
+
+class: in-person, pic
+## Everyone wins !!!
+
+![Everyone wins](images/logo-entreprise.jpg)
+
+.debug[[shared/prereqs.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/shared/prereqs.md)]
+---
+
+class: in-person
+
+## You get a cluster of cloud VMs
+
+- Each person gets a private cluster of cloud VMs (not shared with anybody else)
+
+- They'll remain up for the duration of the workshop
+
+- You should have access to a machine (SSH+Key or User/Password)
+
+- You can automatically SSH from one VM to another
+
+
+.debug[[shared/prereqs.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/shared/prereqs.md)]
+---
+
+class: in-person
+
+## Why don't we run containers locally?
+
+- Installing this stuff can be hard on some machines
+
+  (32 bits CPU or OS... Laptops without administrator access... etc.)
+
+- *"The whole team downloaded all these container images from the WiFi!
+  <br/>... and it went great!"* (Literally no-one ever)
+
+- All you need is a computer (or even a phone or tablet!), with:
+
+  - an Internet connection
+
+  - a web browser
+
+  - an SSH client
+
+.debug[[shared/prereqs.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/shared/prereqs.md)]
+---
+
+class: in-person
+
+## SSH clients
+
+- On Linux, OS X, FreeBSD... you are probably all set
+
+- On Windows, get one of these:
+
+  - [putty](http://www.putty.org/)
+  - Microsoft [Win32 OpenSSH](https://github.com/PowerShell/Win32-OpenSSH/wiki/Install-Win32-OpenSSH)
+  - [Git BASH](https://git-for-windows.github.io/)
+  - [MobaXterm](http://mobaxterm.mobatek.net/)
+
+- On Android, [JuiceSSH](https://juicessh.com/)
+  ([Play Store](https://play.google.com/store/apps/details?id=com.sonelli.juicessh))
+  works pretty well
+
+- Nice-to-have: [Mosh](https://mosh.org/) instead of SSH, if your Internet connection tends to lose packets
+
+.debug[[shared/prereqs.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/shared/prereqs.md)]
+---
+
+class: in-person, extra-details
+
+## What is this Mosh thing?
+
+*You don't have to use Mosh or even know about it to follow along.
+<br/>
+We're just telling you about it because some of us think it's cool!*
+
+- Mosh is "the mobile shell"
+
+- It is essentially SSH over UDP, with roaming features
+
+- It retransmits packets quickly, so it works great even on lossy connections
+
+  (Like hotel or conference WiFi)
+
+- It has intelligent local echo, so it works great even in high-latency connections
+
+  (Like hotel or conference WiFi)
+
+- It supports transparent roaming when your client IP address changes
+
+  (Like when you hop from hotel to conference WiFi)
+
+.debug[[shared/prereqs.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/shared/prereqs.md)]
+---
+
+class: in-person, extra-details
+
+## Using Mosh
+
+- To install it: `(apt|yum|brew) install mosh`
+
+- It has been pre-installed on the VMs that we are using
+
+- To connect to a remote machine: `mosh user@host`
+
+  (It is going to establish an SSH connection, then hand off to UDP)
+
+- It requires UDP ports to be open
+
+  (By default, it uses a UDP port between 60000 and 61000)
+
+.debug[[shared/prereqs.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/shared/prereqs.md)]
+---
+## WebSSH
+
+- The virtual machines are also accessible via WebSSH
+
+- This can be useful if:
+
+  - you can't install an SSH client on your machine
+
+  - SSH connections are blocked (by firewall or local policy)
+
+- To use WebSSH, connect to the IP address of the remote VM on port 1080
+
+  (each machine runs a WebSSH server)
+
+- Then provide the login and password indicated on your card
+
+.debug[[shared/webssh.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/shared/webssh.md)]
+---
+
+## Good to know
+
+- WebSSH uses WebSocket
+
+- If you're having connections issues, try to disable your HTTP proxy
+
+  (many HTTP proxies can't handle WebSocket properly)
+
+- Most keyboard shortcuts should work, except Ctrl-W
+
+  (as it is hardwired by the browser to "close this tab")
+
+.debug[[shared/webssh.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/shared/webssh.md)]
+---
+class: in-person
+
+## Connecting to our lab environment
+
+.lab[
+
+- Log into the first VM (`node1`) with your SSH client:
+  ```bash
+  ssh `user`@`A.B.C.D`
+  ```
+
+  (Replace `user` and `A.B.C.D` with the user and IP address provided to you)
+
+<!--
+```bash
+for N in $(awk '/\Wnode/{print $2}' /etc/hosts); do
+  ssh -o StrictHostKeyChecking=no $N true
+done
+```
+
+```bash
+### FIXME find a way to reset the cluster, maybe?
+```
+-->
+
+]
+
+You should see a prompt looking like this:
+```
+[A.B.C.D] (...) user@node1 ~
+$
+```
+If anything goes wrong — ask for help!
+
+.debug[[shared/connecting.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/shared/connecting.md)]
+---
+
+class: in-person
+
+## `tailhist`
+
+- The shell history of the instructor is available online in real time
+
+- Note the IP address of the instructor's virtual machine (A.B.C.D)
+
+- Open http://A.B.C.D:1088 in your browser and you should see the history
+
+- The history is updated in real time
+
+  (using a WebSocket connection)
+
+- It should be green when the WebSocket is connected
+
+  (if it turns red, reloading the page should fix it)
+
+.debug[[shared/connecting.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/shared/connecting.md)]
+---
+
+## Doing or re-doing the workshop on your own?
+
+- Use something like
+  [Play-With-Docker](http://play-with-docker.com/) or
+  [Play-With-Kubernetes](https://training.play-with-kubernetes.com/)
+
+  Zero setup effort; but environment are short-lived and
+  might have limited resources
+
+- Create your own cluster (local or cloud VMs)
+
+  Small setup effort; small cost; flexible environments
+
+- Create a bunch of clusters for you and your friends
+    ([instructions](https://github.com/denisgaudare/container.training/tree/master/prepare-vms))
+
+  Bigger setup effort; ideal for group training
+
+.debug[[shared/connecting.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/shared/connecting.md)]
+---
+
+## For a consistent Kubernetes experience ...
+
+- If you are using your own Kubernetes cluster, you can use [jpetazzo/shpod](https://github.com/denisgaudare/shpod)
+
+- `shpod` provides a shell running in a pod on your own cluster
+
+- It comes with many tools pre-installed (helm, stern...)
+
+- These tools are used in many demos and exercises in these slides
+
+- `shpod` also gives you completion and a fancy prompt
+
+- It can also be used as an SSH server if needed
+
+.debug[[shared/connecting.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/shared/connecting.md)]
+---
+
+class: self-paced
+
+## Get your own Docker nodes
+
+- If you already have some Docker nodes: great!
+
+- If not: let's get some thanks to Play-With-Docker
+
+.lab[
+
+- Go to http://www.play-with-docker.com/
+
+- Log in
+
+- Create your first node
+
+<!-- ```open http://www.play-with-docker.com/``` -->
+
+]
+
+You will need a Docker ID to use Play-With-Docker.
+
+(Creating a Docker ID is free.)
+
+.debug[[shared/connecting.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/shared/connecting.md)]
+---
+
+## We will (mostly) interact with node1 only
+
+*These remarks apply only when using multiple nodes, of course.*
+
+- Unless instructed, **all commands must be run from the first VM, `node1`**
+
+- We will only check out/copy the code on `node1`
+
+- During normal operations, we do not need access to the other nodes
+
+- If we had to troubleshoot issues, we would use a combination of:
+
+  - SSH (to access system logs, daemon status...)
+
+  - Docker API (to check running containers and container engine status)
+
+.debug[[shared/connecting.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/shared/connecting.md)]
+---
+
+## Terminals
+
+Once in a while, the instructions will say:
+<br/>"Open a new terminal."
+
+There are multiple ways to do this:
+
+- create a new window or tab on your machine, and SSH into the VM;
+
+- use screen or tmux on the VM and open a new window from there.
+
+You are welcome to use the method that you feel the most comfortable with.
+
+.debug[[shared/connecting.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/shared/connecting.md)]
+---
+
+## Tmux cheat sheet
+
+[Tmux](https://en.wikipedia.org/wiki/Tmux) is a terminal multiplexer like `screen`.
+
+*You don't have to use it or even know about it to follow along.
+<br/>
+But some of us like to use it to switch between terminals.
+<br/>
+It has been preinstalled on your workshop nodes.*
+
+- Ctrl-b c → creates a new window
+- Ctrl-b n → go to next window
+- Ctrl-b p → go to previous window
+- Ctrl-b " → split window top/bottom
+- Ctrl-b % → split window left/right
+- Ctrl-b Alt-1 → rearrange windows in columns
+- Ctrl-b Alt-2 → rearrange windows in rows
+- Ctrl-b arrows → navigate to other windows
+- Ctrl-b d → detach session
+- tmux attach → re-attach to session
+
+.debug[[shared/connecting.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/shared/connecting.md)]
+---
+
+name: toc-part-1
+
+## Part 1
+
+- [Pre-requirements](#toc-pre-requirements)
+
+
+.debug[(auto-generated TOC)]
+---
+name: toc-part-2
+
+## Part 2
+
+- [Kustomize](#toc-kustomize)
+
+- [Managing stacks with Helm](#toc-managing-stacks-with-helm)
+
+- [Helm chart format](#toc-helm-chart-format)
+
+- [Creating a basic chart](#toc-creating-a-basic-chart)
+
+
+.debug[(auto-generated TOC)]
+---
+name: toc-part-3
+
+## Part 3
+
+- [Creating better Helm charts](#toc-creating-better-helm-charts)
+
+- [Charts using other charts](#toc-charts-using-other-charts)
+
+- [Helm and invalid values](#toc-helm-and-invalid-values)
+
+- [Helm secrets](#toc-helm-secrets)
+
+
+.debug[(auto-generated TOC)]
+---
+name: toc-part-4
+
+## Part 4
+
+- [cert-manager](#toc-cert-manager)
+
+- [CI/CD with GitLab](#toc-cicd-with-gitlab)
+
+
+.debug[(auto-generated TOC)]
+---
+name: toc-part-5
+
+## Part 5
+
+- [(Extra content)](#toc-extra-content)
+
+- [Collecting metrics with Prometheus](#toc-collecting-metrics-with-prometheus)
+
+- [Prometheus and Grafana](#toc-prometheus-and-grafana)
+
+
+.debug[(auto-generated TOC)]
+
+
+
+.debug[[shared/toc.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/shared/toc.md)]
+---
+
+class: pic
+
+.interstitial[![Image separating from the next part](https://gallant-turing-d0d520.netlify.com/containers/ShippingContainerSFBay.jpg)]
+
+---
+
+name: toc-kustomize
+class: title
+
+ Kustomize
+
+.nav[
+[Previous part](#toc-pre-requirements)
+|
+[Back to table of contents](#toc-part-2)
+|
+[Next part](#toc-managing-stacks-with-helm)
+]
+
+.debug[(automatically generated title slide)]
+
+---
+# Kustomize
+
+- Kustomize lets us transform Kubernetes resources:
+
+  *YAML + kustomize → new YAML*
+
+- Starting point = valid resource files
+
+  (i.e. something that we could load with `kubectl apply -f`)
+
+- Recipe = a *kustomization* file
+
+  (describing how to transform the resources)
+
+- Result = new resource files
+
+  (that we can load with `kubectl apply -f`)
+
+.debug[[k8s/kustomize.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/kustomize.md)]
+---
+
+## Pros and cons
+
+- Relatively easy to get started
+
+  (just get some existing YAML files)
+
+- Easy to leverage existing "upstream" YAML files
+
+  (or other *kustomizations*)
+
+- Somewhat integrated with `kubectl`
+
+  (but only "somewhat" because of version discrepancies)
+
+- Less complex than e.g. Helm, but also less powerful
+
+- No central index like the Artifact Hub (but is there a need for it?)
+
+.debug[[k8s/kustomize.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/kustomize.md)]
+---
+
+## Kustomize in a nutshell
+
+- Get some valid YAML (our "resources")
+
+- Write a *kustomization* (technically, a file named `kustomization.yaml`)
+
+  - reference our resources
+
+  - reference other kustomizations
+
+  - add some *patches*
+
+  - ...
+
+- Use that kustomization either with `kustomize build` or `kubectl apply -k`
+
+- Write new kustomizations referencing the first one to handle minor differences
+
+.debug[[k8s/kustomize.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/kustomize.md)]
+---
+
+## A simple kustomization
+
+This features a Deployment, Service, and Ingress (in separate files),
+and a couple of patches (to change the number of replicas and the hostname
+used in the Ingress).
+
+```yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+patchesStrategicMerge:
+- scale-deployment.yaml
+- ingress-hostname.yaml
+resources:
+- deployment.yaml
+- service.yaml
+- ingress.yaml
+```
+
+On the next slide, let's see a more complex example ...
+
+.debug[[k8s/kustomize.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/kustomize.md)]
+---
+
+## A more complex Kustomization
+
+.small[
+```yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+commonAnnotations:
+  mood: 😎
+commonLabels:
+  add-this-to-all-my-resources: please
+namePrefix: prod-
+patchesStrategicMerge:
+- prod-scaling.yaml
+- prod-healthchecks.yaml
+bases:
+- api/
+- frontend/
+- db/
+- github.com/example/app?ref=tag-or-branch
+resources:
+- ingress.yaml
+- permissions.yaml
+configMapGenerator:
+- name: appconfig
+  files:
+  - global.conf
+  - local.conf=prod.conf
+```
+]
+
+.debug[[k8s/kustomize.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/kustomize.md)]
+---
+
+## Glossary
+
+- A *base* is a kustomization that is referred to by other kustomizations
+
+- An *overlay* is a kustomization that refers to other kustomizations
+
+- A kustomization can be both a base and an overlay at the same time
+
+  (a kustomization can refer to another, which can refer to a third)
+
+- A *patch* describes how to alter an existing resource
+
+  (e.g. to change the image in a Deployment; or scaling parameters; etc.)
+
+- A *variant* is the final outcome of applying bases + overlays
+
+(See the [kustomize glossary](https://github.com/kubernetes-sigs/kustomize/blob/master/docs/glossary.md) for more definitions!)
+
+.debug[[k8s/kustomize.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/kustomize.md)]
+---
+
+## What Kustomize *cannot* do
+
+- By design, there are a number of things that Kustomize won't do
+
+- For instance:
+
+  - using command-line arguments or environment variables to generate a variant
+
+  - overlays can only *add* resources, not *remove* them
+
+- See the full list of [eschewed features](https://github.com/kubernetes-sigs/kustomize/blob/master/docs/eschewedFeatures.md) for more details
+
+.debug[[k8s/kustomize.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/kustomize.md)]
+---
+
+## Kustomize workflows
+
+- The Kustomize documentation proposes two different workflows
+
+- *Bespoke configuration*
+
+   - base and overlays managed by the same team
+
+- *Off-the-shelf configuration* (OTS)
+
+  - base and overlays managed by different teams
+
+  - base is regularly updated by "upstream" (e.g. a vendor)
+
+  - our overlays and patches should (hopefully!) apply cleanly
+
+  - we may regularly update the base, or use a remote base
+
+.debug[[k8s/kustomize.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/kustomize.md)]
+---
+
+## Remote bases
+
+- Kustomize can also use bases that are remote git repositories
+
+- Examples:
+
+  github.com/denisgaudare/kubercoins (remote git repository)
+
+  github.com/denisgaudare/kubercoins?ref=kustomize (specific tag or branch)
+
+- Note that this only works for kustomizations, not individual resources
+
+  (the specified repository or directory must contain a `kustomization.yaml` file)
+
+.debug[[k8s/kustomize.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/kustomize.md)]
+---
+
+class: extra-details
+
+## Hashicorp go-getter
+
+- Some versions of Kustomize support additional forms for remote resources
+
+- Examples:
+
+  https://releases.hello.io/k/1.0.zip (remote archive)
+
+  https://releases.hello.io/k/1.0.zip//some-subdir (subdirectory in archive)
+
+- This relies on [hashicorp/go-getter](https://github.com/hashicorp/go-getter#url-format)
+
+- ... But it prevents Kustomize inclusion in `kubectl`
+
+- Avoid them!
+
+- See [kustomize#3578](https://github.com/kubernetes-sigs/kustomize/issues/3578) for details
+
+.debug[[k8s/kustomize.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/kustomize.md)]
+---
+
+## Managing `kustomization.yaml`
+
+- There are many ways to manage `kustomization.yaml` files, including:
+
+  - web wizards like [Replicated Ship](https://www.replicated.com/ship/)
+
+  - the `kustomize` CLI
+
+  - opening the file with our favorite text editor
+
+- Let's see these in action!
+
+.debug[[k8s/kustomize.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/kustomize.md)]
+---
+
+## An easy way to get started with Kustomize
+
+- We are going to use [Replicated Ship](https://www.replicated.com/ship/) to experiment with Kustomize
+
+- The [Replicated Ship CLI](https://github.com/replicatedhq/ship/releases) has been installed on our clusters
+
+- Replicated Ship has multiple workflows; here is what we will do:
+
+  - initialize a Kustomize overlay from a remote GitHub repository
+
+  - customize some values using the web UI provided by Ship
+
+  - look at the resulting files and apply them to the cluster
+
+.debug[[k8s/kustomize.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/kustomize.md)]
+---
+
+## Getting started with Ship
+
+- We need to run `ship init` in a new directory
+
+- `ship init` requires a URL to a remote repository containing Kubernetes YAML
+
+- It will clone that repository and start a web UI
+
+- Later, it can watch that repository and/or update from it
+
+- We will use the [jpetazzo/kubercoins](https://github.com/denisgaudare/kubercoins) repository
+
+  (it contains all the DockerCoins resources as YAML files)
+
+.debug[[k8s/kustomize.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/kustomize.md)]
+---
+
+## `ship init`
+
+.lab[
+
+- Change to a new directory:
+  ```bash
+  mkdir ~/kustomcoins
+  cd ~/kustomcoins
+  ```
+
+- Run `ship init` with the kustomcoins repository:
+  ```bash
+  ship init https://github.com/denisgaudare/kubercoins
+  ```
+
+<!-- ```wait Open browser``` -->
+
+]
+
+.debug[[k8s/kustomize.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/kustomize.md)]
+---
+
+## Access the web UI
+
+- `ship init` tells us to connect on `localhost:8800`
+
+- We need to replace `localhost` with the address of our node
+
+  (since we run on a remote machine)
+
+- Follow the steps in the web UI, and change one parameter
+
+  (e.g. set the number of replicas in the worker Deployment)
+
+- Complete the web workflow, and go back to the CLI
+
+.debug[[k8s/kustomize.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/kustomize.md)]
+---
+
+## Inspect the results
+
+- Look at the content of our directory
+
+- `base` contains the kubercoins repository + a `kustomization.yaml` file
+
+- `overlays/ship` contains the Kustomize overlay referencing the base + our patch(es)
+
+- `rendered.yaml` is a YAML bundle containing the patched application
+
+- `.ship` contains a state file used by Ship
+
+.debug[[k8s/kustomize.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/kustomize.md)]
+---
+
+## Using the results
+
+- We can `kubectl apply -f rendered.yaml`
+
+  (on any version of Kubernetes)
+
+- Starting with Kubernetes 1.14, we can apply the overlay directly with:
+  ```bash
+  kubectl apply -k overlays/ship
+  ```
+
+- But let's not do that for now!
+
+- We will create a new copy of DockerCoins in another namespace
+
+.debug[[k8s/kustomize.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/kustomize.md)]
+---
+
+## Deploy DockerCoins with Kustomize
+
+.lab[
+
+- Create a new namespace:
+  ```bash
+  kubectl create namespace kustomcoins
+  ```
+
+- Deploy DockerCoins:
+  ```bash
+  kubectl apply -f rendered.yaml --namespace=kustomcoins
+  ```
+
+- Or, with Kubernetes 1.14, we can also do this:
+  ```bash
+  kubectl apply -k overlays/ship --namespace=kustomcoins
+  ```
+
+]
+
+.debug[[k8s/kustomize.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/kustomize.md)]
+---
+
+## Checking our new copy of DockerCoins
+
+- We can check the worker logs, or the web UI
+
+.lab[
+
+- Retrieve the NodePort number of the web UI:
+  ```bash
+  kubectl get service webui --namespace=kustomcoins
+  ```
+
+- Open it in a web browser
+
+- Look at the worker logs:
+  ```bash
+  kubectl logs deploy/worker --tail=10 --follow --namespace=kustomcoins
+  ```
+
+<!--
+```wait units of work done``` 
+```key ^C```
+-->
+
+]
+
+Note: it might take a minute or two for the worker to start.
+
+.debug[[k8s/kustomize.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/kustomize.md)]
+---
+
+## Working with the `kustomize` CLI
+
+- This is another way to get started
+
+- General workflow:
+
+  `kustomize create` to generate an empty `kustomization.yaml` file
+
+  `kustomize edit add resource` to add Kubernetes YAML files to it
+
+  `kustomize edit add patch` to add patches to said resources
+
+  `kustomize build | kubectl apply -f-` or `kubectl apply -k .`
+
+.debug[[k8s/kustomize.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/kustomize.md)]
+---
+
+## `kubectl` integration
+
+- Kustomize has been integrated in `kubectl` (since Kubernetes 1.14)
+
+  - `kubectl kustomize` can apply a kustomization
+
+  - commands that use `-f` can also use `-k` (`kubectl apply`/`delete`/...)
+
+- The `kustomize` tool is still needed if we want to use `create`, `edit`, ...
+
+- Kubernetes 1.14 to 1.20 uses Kustomize 2.0.3
+
+- Kubernetes 1.21 jumps to Kustomize 4.1.2
+
+- Future versions should track Kustomize updates more closely
+
+.debug[[k8s/kustomize.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/kustomize.md)]
+---
+
+class: extra-details
+
+## Differences between 2.0.3 and later
+
+- Kustomize 2.1 / 3.0 deprecates `bases` (they should be listed in `resources`)
+
+  (this means that "modern" `kustomize edit add resource` won't work with "old" `kubectl apply -k`)
+
+- Kustomize 2.1 introduces `replicas` and `envs`
+
+- Kustomize 3.1 introduces multipatches
+
+- Kustomize 3.2 introduce inline patches in `kustomization.yaml`
+
+- Kustomize 3.3 to 3.10 is mostly internal refactoring
+
+- Kustomize 4.0 drops go-getter again
+
+- Kustomize 4.1 allows patching kind and name
+
+.debug[[k8s/kustomize.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/kustomize.md)]
+---
+
+## Scaling
+
+Instead of using a patch, scaling can be done like this:
+
+```yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+...
+replicas:
+- name: worker
+  count: 5
+```
+
+It will automatically work with Deployments, ReplicaSets, StatefulSets.
+
+(For other resource types, fall back to a patch.)
+
+.debug[[k8s/kustomize.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/kustomize.md)]
+---
+
+## Updating images
+
+Instead of using patches, images can be changed like this:
+
+```yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+...
+images:
+- name: postgres
+  newName: harbor.enix.io/my-postgres
+- name: dockercoins/worker
+  newTag: v0.2
+- name: dockercoins/hasher
+  newName: registry.dockercoins.io/hasher
+  newTag: v0.2
+- name: alpine
+  digest: sha256:24a0c4b4a4c0eb97a1aabb8e29f18e917d05abfe1b7a7c07857230879ce7d3d3
+```
+
+.debug[[k8s/kustomize.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/kustomize.md)]
+---
+
+## Updating images, pros and cons
+
+- Very convenient when the same image appears multiple times
+
+- Very convenient to define tags (or pin to hashes) outside of the main YAML
+
+- Doesn't support wildcard or generic substitutions:
+
+  - cannot "replace `dockercoins/*` with `ghcr.io/dockercoins/*`"
+
+  - cannot "tag all `dockercoins/*` with `v0.2`"
+
+- Only patches "well-known" image fields (won't work with CRDs referencing images)
+
+- Helm can deal with these scenarios, for instance:
+  ```yaml
+  image: {{ .Values.registry }}/worker:{{ .Values.version }}
+  ```
+
+.debug[[k8s/kustomize.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/kustomize.md)]
+---
+
+## Advanced resource patching
+
+The example below shows how to:
+
+- patch multiple resources with a selector (new in Kustomize 3.1)
+- use an inline patch instead of a separate patch file (new in Kustomize 3.2)
+
+```yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+...
+patches:
+- patch: |-
+    - op: replace
+      path: /spec/template/spec/containers/0/image
+      value: alpine
+  target:
+    kind: Deployment
+    labelSelector: "app"
+```
+
+(This replaces all images of Deployments matching the `app` selector with `alpine`.)
+
+.debug[[k8s/kustomize.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/kustomize.md)]
+---
+
+## Advanced resource patching, pros and cons
+
+- Very convenient to patch an arbitrary number of resources
+
+- Very convenient to patch any kind of resource, including CRDs
+
+- Doesn't support "fine-grained" patching (e.g. image registry or tag)
+
+- Once again, Helm can do it:
+  ```yaml
+  image: {{ .Values.registry }}/worker:{{ .Values.version }}
+  ```
+
+.debug[[k8s/kustomize.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/kustomize.md)]
+---
+
+## Differences with Helm
+
+- Helm charts generally require more upfront work
+
+  (while kustomize "bases" are standard Kubernetes YAML)
+
+- ... But Helm charts are also more powerful; their templating language can:
+
+  - conditionally include/exclude resources or blocks within resources
+
+  - generate values by concatenating, hashing, transforming parameters
+
+  - generate values or resources by iteration (`{{ range ... }}`)
+
+  - access the Kubernetes API during template evaluation
+
+  - [and much more](https://helm.sh/docs/chart_template_guide/)
+
+???
+
+:EN:- Packaging and running apps with Kustomize
+:FR:- *Packaging* d'applications avec Kustomize
+
+.debug[[k8s/kustomize.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/kustomize.md)]
+---
+
+class: pic
+
+.interstitial[![Image separating from the next part](https://gallant-turing-d0d520.netlify.com/containers/aerial-view-of-containers.jpg)]
+
+---
+
+name: toc-managing-stacks-with-helm
+class: title
+
+ Managing stacks with Helm
+
+.nav[
+[Previous part](#toc-kustomize)
+|
+[Back to table of contents](#toc-part-2)
+|
+[Next part](#toc-helm-chart-format)
+]
+
+.debug[(automatically generated title slide)]
+
+---
+# Managing stacks with Helm
+
+- Helm is a (kind of!) package manager for Kubernetes
+
+- We can use it to:
+
+  - find existing packages (called "charts") created by other folks
+
+  - install these packages, configuring them for our particular setup
+
+  - package our own things (for distribution or for internal use)
+
+  - manage the lifecycle of these installs (rollback to previous version etc.)
+
+- It's a "CNCF graduate project", indicating a certain level of maturity
+
+  (more on that later)
+
+.debug[[k8s/helm-intro.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-intro.md)]
+---
+
+## From `kubectl run` to YAML
+
+- We can create resources with one-line commands
+
+  (`kubectl run`, `kubectl create deployment`, `kubectl expose`...)
+
+- We can also create resources by loading YAML files
+
+  (with `kubectl apply -f`, `kubectl create -f`...)
+
+- There can be multiple resources in a single YAML files
+
+  (making them convenient to deploy entire stacks)
+
+- However, these YAML bundles often need to be customized
+
+  (e.g.: number of replicas, image version to use, features to enable...)
+
+.debug[[k8s/helm-intro.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-intro.md)]
+---
+
+## Beyond YAML
+
+- Very often, after putting together our first `app.yaml`, we end up with:
+
+  - `app-prod.yaml`
+
+  - `app-staging.yaml`
+
+  - `app-dev.yaml`
+
+  - instructions indicating to users "please tweak this and that in the YAML"
+
+- That's where using something like
+  [CUE](https://github.com/cuelang/cue/blob/v0.3.2/doc/tutorial/kubernetes/README.md),
+  [Kustomize](https://kustomize.io/),
+  or [Helm](https://helm.sh/) can help!
+
+- Now we can do something like this:
+  ```bash
+  helm install app ... --set this.parameter=that.value
+  ```
+
+.debug[[k8s/helm-intro.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-intro.md)]
+---
+
+## Other features of Helm
+
+- With Helm, we create "charts"
+
+- These charts can be used internally or distributed publicly
+
+- Public charts can be indexed through the [Artifact Hub](https://artifacthub.io/)
+
+- This gives us a way to find and install other folks' charts
+
+- Helm also gives us ways to manage the lifecycle of what we install:
+
+  - keep track of what we have installed
+
+  - upgrade versions, change parameters, roll back, uninstall
+
+- Furthermore, even if it's not "the" standard, it's definitely "a" standard!
+
+.debug[[k8s/helm-intro.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-intro.md)]
+---
+
+## CNCF graduation status
+
+- On April 30th 2020, Helm was the 10th project to *graduate* within the CNCF
+
+  🎉
+
+  (alongside Containerd, Prometheus, and Kubernetes itself)
+
+- This is an acknowledgement by the CNCF for projects that
+
+  *demonstrate thriving adoption, an open governance process,
+  <br/>
+  and a strong commitment to community, sustainability, and inclusivity.*
+
+- See [CNCF announcement](https://www.cncf.io/announcement/2020/04/30/cloud-native-computing-foundation-announces-helm-graduation/)
+  and [Helm announcement](https://helm.sh/blog/celebrating-helms-cncf-graduation/)
+
+.debug[[k8s/helm-intro.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-intro.md)]
+---
+
+## Helm concepts
+
+- `helm` is a CLI tool
+
+- It is used to find, install, upgrade *charts*
+
+- A chart is an archive containing templatized YAML bundles
+
+- Charts are versioned
+
+- Charts can be stored on private or public repositories
+
+.debug[[k8s/helm-intro.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-intro.md)]
+---
+
+## Differences between charts and packages
+
+- A package (deb, rpm...) contains binaries, libraries, etc.
+
+- A chart contains YAML manifests
+
+  (the binaries, libraries, etc. are in the images referenced by the chart)
+
+- On most distributions, a package can only be installed once
+
+  (installing another version replaces the installed one)
+
+- A chart can be installed multiple times
+
+- Each installation is called a *release*
+
+- This allows to install e.g. 10 instances of MongoDB
+
+  (with potentially different versions and configurations)
+
+.debug[[k8s/helm-intro.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-intro.md)]
+---
+
+class: extra-details
+
+## Wait a minute ...
+
+*But, on my Debian system, I have Python 2 **and** Python 3.
+<br/>
+Also, I have multiple versions of the Postgres database engine!*
+
+Yes!
+
+But they have different package names:
+
+- `python2.7`, `python3.8`
+
+- `postgresql-10`, `postgresql-11`
+
+Good to know: the Postgres package in Debian includes
+provisions to deploy multiple Postgres servers on the
+same system, but it's an exception (and it's a lot of
+work done by the package maintainer, not by the `dpkg`
+or `apt` tools).
+
+.debug[[k8s/helm-intro.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-intro.md)]
+---
+
+## Helm 2 vs Helm 3
+
+- Helm 3 was released [November 13, 2019](https://helm.sh/blog/helm-3-released/)
+
+- Charts remain compatible between Helm 2 and Helm 3
+
+- The CLI is very similar (with minor changes to some commands)
+
+- The main difference is that Helm 2 uses `tiller`, a server-side component
+
+- Helm 3 doesn't use `tiller` at all, making it simpler (yay!)
+
+.debug[[k8s/helm-intro.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-intro.md)]
+---
+
+class: extra-details
+
+## With or without `tiller`
+
+- With Helm 3:
+
+  - the `helm` CLI communicates directly with the Kubernetes API
+
+  - it creates resources (deployments, services...) with our credentials
+
+- With Helm 2:
+
+  - the `helm` CLI communicates with `tiller`, telling `tiller` what to do
+
+  - `tiller` then communicates with the Kubernetes API, using its own credentials
+
+- This indirect model caused significant permissions headaches
+
+  (`tiller` required very broad permissions to function)
+
+- `tiller` was removed in Helm 3 to simplify the security aspects
+
+.debug[[k8s/helm-intro.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-intro.md)]
+---
+
+## Installing Helm
+
+- If the `helm` CLI is not installed in your environment, install it
+
+.lab[
+
+- Check if `helm` is installed:
+  ```bash
+  helm
+  ```
+
+- If it's not installed, run the following command:
+  ```bash
+  curl https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get-helm-3 \
+  | bash
+  ```
+
+]
+
+(To install Helm 2, replace `get-helm-3` with `get`.)
+
+.debug[[k8s/helm-intro.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-intro.md)]
+---
+
+class: extra-details
+
+## Only if using Helm 2 ...
+
+- We need to install Tiller and give it some permissions
+
+- Tiller is composed of a *service* and a *deployment* in the `kube-system` namespace
+
+- They can be managed (installed, upgraded...) with the `helm` CLI
+
+.lab[
+
+- Deploy Tiller:
+  ```bash
+  helm init
+  ```
+
+]
+
+At the end of the install process, you will see:
+
+```
+Happy Helming!
+```
+
+.debug[[k8s/helm-intro.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-intro.md)]
+---
+
+class: extra-details
+
+## Only if using Helm 2 ...
+
+- Tiller needs permissions to create Kubernetes resources
+
+- In a more realistic deployment, you might create per-user or per-team
+  service accounts, roles, and role bindings
+
+.lab[
+
+- Grant `cluster-admin` role to `kube-system:default` service account:
+  ```bash
+  kubectl create clusterrolebinding add-on-cluster-admin \
+      --clusterrole=cluster-admin --serviceaccount=kube-system:default
+  ```
+
+
+]
+
+(Defining the exact roles and permissions on your cluster requires
+a deeper knowledge of Kubernetes' RBAC model. The command above is
+fine for personal and development clusters.)
+
+.debug[[k8s/helm-intro.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-intro.md)]
+---
+
+## Charts and repositories
+
+- A *repository* (or repo in short) is a collection of charts
+
+- It's just a bunch of files
+
+  (they can be hosted by a static HTTP server, or on a local directory)
+
+- We can add "repos" to Helm, giving them a nickname
+
+- The nickname is used when referring to charts on that repo
+
+  (for instance, if we try to install `hello/world`, that
+  means the chart `world` on the repo `hello`; and that repo
+  `hello` might be something like https://blahblah.hello.io/charts/)
+
+.debug[[k8s/helm-intro.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-intro.md)]
+---
+
+class: extra-details
+
+## How to find charts, the old way
+
+- Helm 2 came with one pre-configured repo, the "stable" repo
+
+  (located at https://charts.helm.sh/stable)
+
+- Helm 3 doesn't have any pre-configured repo
+
+- The "stable" repo mentioned above is now being deprecated
+
+- The new approach is to have fully decentralized repos
+
+- Repos can be indexed in the Artifact Hub
+
+  (which supersedes the Helm Hub)
+
+.debug[[k8s/helm-intro.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-intro.md)]
+---
+
+## How to find charts, the new way
+
+- Go to the [Artifact Hub](https://artifacthub.io/packages/search?kind=0) (https://artifacthub.io)
+
+- Or use `helm search hub ...` from the CLI
+
+- Let's try to find a Helm chart for something called "OWASP Juice Shop"!
+
+  (it is a famous demo app used in security challenges)
+
+.debug[[k8s/helm-intro.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-intro.md)]
+---
+
+## Finding charts from the CLI
+
+- We can use `helm search hub <keyword>`
+
+.lab[
+
+- Look for the OWASP Juice Shop app:
+  ```bash
+  helm search hub owasp juice
+  ```
+
+- Since the URLs are truncated, try with the YAML output:
+  ```bash
+  helm search hub owasp juice -o yaml
+  ```
+
+]
+
+Then go to → https://artifacthub.io/packages/helm/seccurecodebox/juice-shop
+
+.debug[[k8s/helm-intro.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-intro.md)]
+---
+
+## Finding charts on the web
+
+- We can also use the Artifact Hub search feature
+
+.lab[
+
+- Go to https://artifacthub.io/
+
+- In the search box on top, enter "owasp juice"
+
+- Click on the "juice-shop" result (not "multi-juicer" or "juicy-ctf")
+
+]
+
+.debug[[k8s/helm-intro.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-intro.md)]
+---
+
+## Installing the chart
+
+- Click on the "Install" button, it will show instructions
+
+.lab[
+
+- First, add the repository for that chart:
+  ```bash
+  helm repo add juice https://charts.securecodebox.io
+  ```
+
+- Then, install the chart:
+  ```bash
+  helm install my-juice-shop juice/juice-shop
+  ```
+
+]
+
+Note: it is also possible to install directly a chart, with `--repo https://...`
+
+.debug[[k8s/helm-intro.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-intro.md)]
+---
+
+## Charts and releases
+
+- "Installing a chart" means creating a *release*
+
+- In the previous example, the release was named "my-juice-shop"
+
+- We can also use `--generate-name` to ask Helm to generate a name for us
+
+.lab[
+
+- List the releases:
+  ```bash
+  helm list
+  ```
+
+- Check that we have a `my-juice-shop-...` Pod up and running:
+  ```bash
+  kubectl get pods
+  ```
+
+]
+
+.debug[[k8s/helm-intro.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-intro.md)]
+---
+
+class: extra-details
+
+## Searching and installing with Helm 2
+
+- Helm 2 doesn't have support for the Helm Hub
+
+- The `helm search` command only takes a search string argument
+
+  (e.g. `helm search juice-shop`)
+
+- With Helm 2, the name is optional:
+
+  `helm install juice/juice-shop` will automatically generate a name
+
+  `helm install --name my-juice-shop juice/juice-shop` will specify a name
+
+.debug[[k8s/helm-intro.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-intro.md)]
+---
+
+## Viewing resources of a release
+
+- This specific chart labels all its resources with a `release` label
+
+- We can use a selector to see these resources
+
+.lab[
+
+- List all the resources created by this release:
+  ```bash
+  kubectl get all --selector=app.kubernetes.io/instance=my-juice-shop
+  ```
+
+]
+
+Note: this label wasn't added automatically by Helm.
+<br/>
+It is defined in that chart. In other words, not all charts will provide this label.
+
+.debug[[k8s/helm-intro.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-intro.md)]
+---
+
+## Configuring a release
+
+- By default, `juice/juice-shop` creates a service of type `ClusterIP`
+
+- We would like to change that to a `NodePort`
+
+- We could use `kubectl edit service my-juice-shop`, but ...
+
+  ... our changes would get overwritten next time we update that chart!
+
+- Instead, we are going to *set a value*
+
+- Values are parameters that the chart can use to change its behavior
+
+- Values have default values
+
+- Each chart is free to define its own values and their defaults
+
+.debug[[k8s/helm-intro.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-intro.md)]
+---
+
+## Checking possible values
+
+- We can inspect a chart with `helm show` or `helm inspect`
+
+.lab[
+
+- Look at the README for the app:
+  ```bash
+  helm show readme juice/juice-shop
+  ```
+
+- Look at the values and their defaults:
+  ```bash
+  helm show values juice/juice-shop
+  ```
+
+]
+
+The `values` may or may not have useful comments.
+
+The `readme` may or may not have (accurate) explanations for the values.
+
+(If we're unlucky, there won't be any indication about how to use the values!)
+
+.debug[[k8s/helm-intro.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-intro.md)]
+---
+
+## Setting values
+
+- Values can be set when installing a chart, or when upgrading it
+
+- We are going to update `my-juice-shop` to change the type of the service
+
+.lab[
+
+- Update `my-juice-shop`:
+  ```bash
+  helm upgrade my-juice-shop juice/my-juice-shop \
+       --set service.type=NodePort
+  ```
+
+]
+
+Note that we have to specify the chart that we use (`juice/my-juice-shop`),
+even if we just want to update some values.
+
+We can set multiple values. If we want to set many values, we can use `-f`/`--values` and pass a YAML file with all the values.
+
+All unspecified values will take the default values defined in the chart.
+
+.debug[[k8s/helm-intro.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-intro.md)]
+---
+
+## Connecting to the Juice Shop
+
+- Let's check the app that we just installed
+
+.lab[
+
+- Check the node port allocated to the service:
+  ```bash
+  kubectl get service my-juice-shop
+  PORT=$(kubectl get service my-juice-shop -o jsonpath={..nodePort})
+  ```
+
+- Connect to it:
+  ```bash
+  curl localhost:$PORT/
+  ```
+
+]
+
+???
+
+:EN:- Helm concepts
+:EN:- Installing software with Helm
+:EN:- Helm 2, Helm 3, and the Helm Hub
+
+:FR:- Fonctionnement général de Helm
+:FR:- Installer des composants via Helm
+:FR:- Helm 2, Helm 3, et le *Helm Hub*
+
+:T: Getting started with Helm and its concepts
+
+:Q: Which comparison is the most adequate?
+:A: Helm is a firewall, charts are access lists
+:A: ✔️Helm is a package manager, charts are packages
+:A: Helm is an artefact repository, charts are artefacts
+:A: Helm is a CI/CD platform, charts are CI/CD pipelines
+
+:Q: What's required to distribute a Helm chart?
+:A: A Helm commercial license
+:A: A Docker registry
+:A: An account on the Helm Hub
+:A: ✔️An HTTP server
+
+.debug[[k8s/helm-intro.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-intro.md)]
+---
+
+class: pic
+
+.interstitial[![Image separating from the next part](https://gallant-turing-d0d520.netlify.com/containers/blue-containers.jpg)]
+
+---
+
+name: toc-helm-chart-format
+class: title
+
+ Helm chart format
+
+.nav[
+[Previous part](#toc-managing-stacks-with-helm)
+|
+[Back to table of contents](#toc-part-2)
+|
+[Next part](#toc-creating-a-basic-chart)
+]
+
+.debug[(automatically generated title slide)]
+
+---
+# Helm chart format
+
+- What exactly is a chart?
+
+- What's in it?
+
+- What would be involved in creating a chart?
+
+  (we won't create a chart, but we'll see the required steps)
+
+.debug[[k8s/helm-chart-format.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-chart-format.md)]
+---
+
+## What is a chart
+
+- A chart is a set of files
+
+- Some of these files are mandatory for the chart to be viable
+
+  (more on that later)
+
+- These files are typically packed in a tarball
+
+- These tarballs are stored in "repos"
+
+  (which can be static HTTP servers)
+
+- We can install from a repo, from a local tarball, or an unpacked tarball
+
+  (the latter option is preferred when developing a chart)
+
+.debug[[k8s/helm-chart-format.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-chart-format.md)]
+---
+
+## What's in a chart
+
+- A chart must have at least:
+
+  - a `templates` directory, with YAML manifests for Kubernetes resources
+
+  - a `values.yaml` file, containing (tunable) parameters for the chart
+
+  - a `Chart.yaml` file, containing metadata (name, version, description ...)
+
+- Let's look at a simple chart for a basic demo app
+
+.debug[[k8s/helm-chart-format.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-chart-format.md)]
+---
+
+## Adding the repo
+
+- If you haven't done it before, you need to add the repo for that chart
+
+.lab[
+
+- Add the repo that holds the chart for the OWASP Juice Shop:
+  ```bash
+  helm repo add juice https://charts.securecodebox.io
+  ```
+
+]
+
+.debug[[k8s/helm-chart-format.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-chart-format.md)]
+---
+
+## Downloading a chart
+
+- We can use `helm pull` to download a chart from a repo
+
+.lab[
+
+- Download the tarball for `juice/juice-shop`:
+  ```bash
+  helm pull juice/juice-shop
+  ```
+  (This will create a file named `juice-shop-X.Y.Z.tgz`.)
+
+- Or, download + untar `juice/juice-shop`:
+  ```bash
+  helm pull juice/juice-shop --untar
+  ```
+  (This will create a directory named `juice-shop`.)
+
+]
+
+.debug[[k8s/helm-chart-format.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-chart-format.md)]
+---
+
+## Looking at the chart's content
+
+- Let's look at the files and directories in the `juice-shop` chart
+
+.lab[
+
+- Display the tree structure of the chart we just downloaded:
+  ```bash
+  tree juice-shop
+  ```
+
+]
+
+We see the components mentioned above: `Chart.yaml`, `templates/`, `values.yaml`.
+
+.debug[[k8s/helm-chart-format.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-chart-format.md)]
+---
+
+## Templates
+
+- The `templates/` directory contains YAML manifests for Kubernetes resources
+
+  (Deployments, Services, etc.)
+
+- These manifests can contain template tags
+
+  (using the standard Go template library)
+
+.lab[
+
+- Look at the template file for the Service resource:
+  ```bash
+  cat juice-shop/templates/service.yaml
+  ```
+
+]
+
+.debug[[k8s/helm-chart-format.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-chart-format.md)]
+---
+
+## Analyzing the template file
+
+- Tags are identified by `{{ ... }}`
+
+- `{{ template "x.y" }}` expands a [named template](https://helm.sh/docs/chart_template_guide/named_templates/#declaring-and-using-templates-with-define-and-template)
+
+  (previously defined with `{{ define "x.y" }}...stuff...{{ end }}`)
+
+- The `.` in `{{ template "x.y" . }}` is the *context* for that named template
+
+  (so that the named template block can access variables from the local context)
+
+- `{{ .Release.xyz }}` refers to [built-in variables](https://helm.sh/docs/chart_template_guide/builtin_objects/) initialized by Helm
+
+  (indicating the chart name, version, whether we are installing or upgrading ...)
+
+- `{{ .Values.xyz }}` refers to tunable/settable [values](https://helm.sh/docs/chart_template_guide/values_files/)
+
+  (more on that in a minute)
+
+.debug[[k8s/helm-chart-format.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-chart-format.md)]
+---
+
+## Values
+
+- Each chart comes with a
+  [values file](https://helm.sh/docs/chart_template_guide/values_files/)
+
+- It's a YAML file containing a set of default parameters for the chart
+
+- The values can be accessed in templates with e.g. `{{ .Values.x.y }}`
+
+  (corresponding to field `y` in map `x` in the values file)
+
+- The values can be set or overridden when installing or ugprading a chart:
+
+  - with `--set x.y=z` (can be used multiple times to set multiple values)
+
+  - with `--values some-yaml-file.yaml` (set a bunch of values from a file)
+
+- Charts following best practices will have values following specific patterns
+
+  (e.g. having a `service` map allowing to set `service.type` etc.)
+
+.debug[[k8s/helm-chart-format.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-chart-format.md)]
+---
+
+## Other useful tags
+
+- `{{ if x }} y {{ end }}` allows to include `y` if `x` evaluates to `true`
+
+  (can be used for e.g. healthchecks, annotations, or even an entire resource)
+
+- `{{ range x }} y {{ end }}` iterates over `x`, evaluating `y` each time
+
+  (the elements of `x` are assigned to `.` in the range scope)
+
+- `{{- x }}`/`{{ x -}}` will remove whitespace on the left/right
+
+- The whole [Sprig](http://masterminds.github.io/sprig/) library, with additions:
+
+  `lower` `upper` `quote` `trim` `default` `b64enc` `b64dec` `sha256sum` `indent` `toYaml` ...
+
+.debug[[k8s/helm-chart-format.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-chart-format.md)]
+---
+
+## Pipelines
+
+- `{{ quote blah }}` can also be expressed as `{{ blah | quote }}`
+
+- With multiple arguments, `{{ x y z }}` can be expressed as `{{ z | x y }}`)
+
+- Example: `{{ .Values.annotations | toYaml | indent 4 }}`
+
+  - transforms the map under `annotations` into a YAML string
+
+  - indents it with 4 spaces (to match the surrounding context)
+
+- Pipelines are not specific to Helm, but a feature of Go templates
+
+  (check the [Go text/template documentation](https://golang.org/pkg/text/template/) for more details and examples)
+
+.debug[[k8s/helm-chart-format.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-chart-format.md)]
+---
+
+## README and NOTES.txt
+
+- At the top-level of the chart, it's a good idea to have a README
+
+- It will be viewable with e.g. `helm show readme juice/juice-shop`
+
+- In the `templates/` directory, we can also have a `NOTES.txt` file
+
+- When the template is installed (or upgraded), `NOTES.txt` is processed too
+
+  (i.e. its `{{ ... }}` tags are evaluated)
+
+- It gets displayed after the install or upgrade
+
+- It's a great place to generate messages to tell the user:
+
+  - how to connect to the release they just deployed
+
+  - any passwords or other thing that we generated for them
+
+.debug[[k8s/helm-chart-format.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-chart-format.md)]
+---
+
+## Additional files
+
+- We can place arbitrary files in the chart (outside of the `templates/` directory)
+
+- They can be accessed in templates with `.Files`
+
+- They can be transformed into ConfigMaps or Secrets with `AsConfig` and `AsSecrets`
+
+  (see [this example](https://helm.sh/docs/chart_template_guide/accessing_files/#configmap-and-secrets-utility-functions) in the Helm docs)
+
+.debug[[k8s/helm-chart-format.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-chart-format.md)]
+---
+
+## Hooks and tests
+
+- We can define *hooks* in our templates
+
+- Hooks are resources annotated with `"helm.sh/hook": NAME-OF-HOOK`
+
+- Hook names include `pre-install`, `post-install`, `test`, [and much more](https://helm.sh/docs/topics/charts_hooks/#the-available-hooks)
+
+- The resources defined in hooks are loaded at a specific time
+
+- Hook execution is *synchronous*
+
+  (if the resource is a Job or Pod, Helm will wait for its completion)
+
+- This can be use for database migrations, backups, notifications, smoke tests ...
+
+- Hooks named `test` are executed only when running `helm test RELEASE-NAME`
+
+???
+
+:EN:- Helm charts format
+:FR:- Le format des *Helm charts*
+
+.debug[[k8s/helm-chart-format.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-chart-format.md)]
+---
+
+class: pic
+
+.interstitial[![Image separating from the next part](https://gallant-turing-d0d520.netlify.com/containers/chinook-helicopter-container.jpg)]
+
+---
+
+name: toc-creating-a-basic-chart
+class: title
+
+ Creating a basic chart
+
+.nav[
+[Previous part](#toc-helm-chart-format)
+|
+[Back to table of contents](#toc-part-2)
+|
+[Next part](#toc-creating-better-helm-charts)
+]
+
+.debug[(automatically generated title slide)]
+
+---
+# Creating a basic chart
+
+- We are going to show a way to create a *very simplified* chart
+
+- In a real chart, *lots of things* would be templatized
+
+  (Resource names, service types, number of replicas...)
+
+.lab[
+
+- Create a sample chart:
+  ```bash
+  helm create dockercoins
+  ```
+
+- Move away the sample templates and create an empty template directory:
+  ```bash
+  mv dockercoins/templates dockercoins/default-templates
+  mkdir dockercoins/templates
+  ```
+
+]
+
+.debug[[k8s/helm-create-basic-chart.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-create-basic-chart.md)]
+---
+
+## Adding the manifests of our app
+
+- There is a convenient `dockercoins.yml` in the repo
+
+.lab[
+
+- Copy the YAML file to the `templates` subdirectory in the chart:
+  ```bash
+  cp ~/container.training/k8s/dockercoins.yaml dockercoins/templates
+  ```
+
+]
+
+- Note: it is probably easier to have multiple YAML files
+
+  (rather than a single, big file with all the manifests)
+
+- But that works too!
+
+.debug[[k8s/helm-create-basic-chart.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-create-basic-chart.md)]
+---
+
+## Testing our Helm chart
+
+- Our Helm chart is now ready
+
+  (as surprising as it might seem!)
+
+.lab[
+
+- Let's try to install the chart:
+  ```
+  helm install helmcoins dockercoins
+  ```
+  (`helmcoins` is the name of the release; `dockercoins` is the local path of the chart)
+
+]
+
+--
+
+- If the application is already deployed, this will fail:
+```
+Error: rendered manifests contain a resource that already exists.
+Unable to continue with install: existing resource conflict:
+kind: Service, namespace: default, name: hasher
+```
+
+.debug[[k8s/helm-create-basic-chart.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-create-basic-chart.md)]
+---
+
+## Switching to another namespace
+
+- If there is already a copy of dockercoins in the current namespace:
+
+  - we can switch with `kubens` or `kubectl config set-context`
+
+  - we can also tell Helm to use a different namespace
+
+.lab[
+
+- Create a new namespace:
+  ```bash
+  kubectl create namespace helmcoins
+  ```
+
+- Deploy our chart in that namespace:
+  ```bash
+  helm install helmcoins dockercoins --namespace=helmcoins
+  ```
+
+]
+
+.debug[[k8s/helm-create-basic-chart.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-create-basic-chart.md)]
+---
+
+## Helm releases are namespaced
+
+- Let's try to see the release that we just deployed
+
+.lab[
+
+- List Helm releases:
+  ```bash
+  helm list
+  ```
+
+]
+
+Our release doesn't show up!
+
+We have to specify its namespace (or switch to that namespace).
+
+.debug[[k8s/helm-create-basic-chart.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-create-basic-chart.md)]
+---
+
+## Specifying the namespace
+
+- Try again, with the correct namespace
+
+.lab[
+
+- List Helm releases in `helmcoins`:
+  ```bash
+  helm list --namespace=helmcoins
+  ```
+
+]
+
+.debug[[k8s/helm-create-basic-chart.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-create-basic-chart.md)]
+---
+
+## Checking our new copy of DockerCoins
+
+- We can check the worker logs, or the web UI
+
+.lab[
+
+- Retrieve the NodePort number of the web UI:
+  ```bash
+  kubectl get service webui --namespace=helmcoins
+  ```
+
+- Open it in a web browser
+
+- Look at the worker logs:
+  ```bash
+  kubectl logs deploy/worker --tail=10 --follow --namespace=helmcoins
+  ```
+
+]
+
+Note: it might take a minute or two for the worker to start.
+
+.debug[[k8s/helm-create-basic-chart.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-create-basic-chart.md)]
+---
+
+## Discussion, shortcomings
+
+- Helm (and Kubernetes) best practices recommend to add a number of annotations
+
+  (e.g. `app.kubernetes.io/name`, `helm.sh/chart`, `app.kubernetes.io/instance` ...)
+
+- Our basic chart doesn't have any of these
+
+- Our basic chart doesn't use any template tag
+
+- Does it make sense to use Helm in that case?
+
+- *Yes,* because Helm will:
+
+  - track the resources created by the chart
+
+  - save successive revisions, allowing us to rollback
+
+[Helm docs](https://helm.sh/docs/topics/chart_best_practices/labels/)
+and [Kubernetes docs](https://kubernetes.io/docs/concepts/overview/working-with-objects/common-labels/)
+have details about recommended annotations and labels.
+
+.debug[[k8s/helm-create-basic-chart.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-create-basic-chart.md)]
+---
+
+## Cleaning up
+
+- Let's remove that chart before moving on
+
+.lab[
+
+- Delete the release (don't forget to specify the namespace):
+  ```bash
+  helm delete helmcoins --namespace=helmcoins
+  ```
+
+]
+
+.debug[[k8s/helm-create-basic-chart.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-create-basic-chart.md)]
+---
+
+## Tips when writing charts
+
+- It is not necessary to `helm install`/`upgrade` to test a chart
+
+- If we just want to look at the generated YAML, use `helm template`:
+  ```bash
+  helm template ./my-chart
+  helm template release-name ./my-chart
+  ```
+
+- Of course, we can use `--set` and `--values` too
+
+- Note that this won't fully validate the YAML!
+
+  (e.g. if there is `apiVersion: klingon` it won't complain)
+
+- This can be used when trying things out
+
+.debug[[k8s/helm-create-basic-chart.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-create-basic-chart.md)]
+---
+
+## Exploring the templating system
+
+Try to put something like this in a file in the `templates` directory:
+
+```yaml
+hello: {{ .Values.service.port }}
+comment: {{/* something completely.invalid !!!  */}}
+type: {{ .Values.service | typeOf | printf }}
+### print complex value
+{{ .Values.service | toYaml }}
+### indent it
+indented:
+{{ .Values.service | toYaml | indent 2 }}
+```
+
+Then run `helm template`.
+
+The result is not a valid YAML manifest, but this is a great debugging tool!
+
+???
+
+:EN:- Writing a basic Helm chart for the whole app
+:FR:- Écriture d'un *chart* Helm simplifié
+
+.debug[[k8s/helm-create-basic-chart.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-create-basic-chart.md)]
+---
+
+class: pic
+
+.interstitial[![Image separating from the next part](https://gallant-turing-d0d520.netlify.com/containers/container-cranes.jpg)]
+
+---
+
+name: toc-creating-better-helm-charts
+class: title
+
+ Creating better Helm charts
+
+.nav[
+[Previous part](#toc-creating-a-basic-chart)
+|
+[Back to table of contents](#toc-part-3)
+|
+[Next part](#toc-charts-using-other-charts)
+]
+
+.debug[(automatically generated title slide)]
+
+---
+# Creating better Helm charts
+
+- We are going to create a chart with the helper `helm create`
+
+- This will give us a chart implementing lots of Helm best practices
+
+  (labels, annotations, structure of the `values.yaml` file ...)
+
+- We will use that chart as a generic Helm chart
+
+- We will use it to deploy DockerCoins
+
+- Each component of DockerCoins will have its own *release*
+
+- In other words, we will "install" that Helm chart multiple times
+
+  (one time per component of DockerCoins)
+
+.debug[[k8s/helm-create-better-chart.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-create-better-chart.md)]
+---
+
+## Creating a generic chart
+
+- Rather than starting from scratch, we will use `helm create`
+
+- This will give us a basic chart that we will customize
+
+.lab[
+
+- Create a basic chart:
+  ```bash
+  cd ~
+  helm create helmcoins
+  ```
+
+]
+
+This creates a basic chart in the directory `helmcoins`.
+
+.debug[[k8s/helm-create-better-chart.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-create-better-chart.md)]
+---
+
+## What's in the basic chart?
+
+- The basic chart will create a Deployment and a Service
+
+- Optionally, it will also include an Ingress
+
+- If we don't pass any values, it will deploy the `nginx` image
+
+- We can override many things in that chart
+
+- Let's try to deploy DockerCoins components with that chart!
+
+.debug[[k8s/helm-create-better-chart.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-create-better-chart.md)]
+---
+
+## Writing `values.yaml` for our components
+
+- We need to write one `values.yaml` file for each component
+
+  (hasher, redis, rng, webui, worker)
+
+- We will start with the `values.yaml` of the chart, and remove what we don't need
+
+- We will create 5 files:
+
+  hasher.yaml, redis.yaml, rng.yaml, webui.yaml, worker.yaml
+
+- In each file, we want to have:
+  ```yaml
+    image:
+      repository: IMAGE-REPOSITORY-NAME
+      tag: IMAGE-TAG
+  ```
+
+.debug[[k8s/helm-create-better-chart.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-create-better-chart.md)]
+---
+
+## Getting started
+
+- For component X, we want to use the image dockercoins/X:v0.1
+
+  (for instance, for rng, we want to use the image dockercoins/rng:v0.1)
+
+- Exception: for redis, we want to use the official image redis:latest
+
+.lab[
+
+- Write YAML files for the 5 components, with the following model:
+  ```yaml
+    image:
+      repository: `IMAGE-REPOSITORY-NAME` (e.g. dockercoins/worker)
+      tag: `IMAGE-TAG` (e.g. v0.1)
+  ```
+
+]
+
+.debug[[k8s/helm-create-better-chart.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-create-better-chart.md)]
+---
+
+## Deploying DockerCoins components
+
+- For convenience, let's work in a separate namespace
+
+.lab[
+
+- Create a new namespace (if it doesn't already exist):
+  ```bash
+  kubectl create namespace helmcoins
+  ```
+
+- Switch to that namespace:
+  ```bash
+  kns helmcoins
+  ```
+
+]
+
+.debug[[k8s/helm-create-better-chart.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-create-better-chart.md)]
+---
+
+## Deploying the chart
+
+- To install a chart, we can use the following command:
+  ```bash
+  helm install COMPONENT-NAME CHART-DIRECTORY
+  ```
+
+- We can also use the following command, which is *idempotent*:
+  ```bash
+  helm upgrade COMPONENT-NAME CHART-DIRECTORY --install
+  ```
+
+.lab[
+
+- Install the 5 components of DockerCoins:
+  ```bash
+    for COMPONENT in hasher redis rng webui worker; do
+      helm upgrade $COMPONENT helmcoins --install --values=$COMPONENT.yaml
+    done
+  ```
+
+]
+
+.debug[[k8s/helm-create-better-chart.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-create-better-chart.md)]
+---
+
+class: extra-details
+
+## "Idempotent"
+
+- Idempotent = that can be applied multiple times without changing the result
+
+  (the word is commonly used in maths and computer science)
+
+- In this context, this means:
+
+  - if the action (installing the chart) wasn't done, do it
+
+  - if the action was already done, don't do anything
+
+- Ideally, when such an action fails, it can be retried safely
+
+  (as opposed to, e.g., installing a new release each time we run it)
+
+- Other example: `kubectl -f some-file.yaml`
+
+.debug[[k8s/helm-create-better-chart.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-create-better-chart.md)]
+---
+
+## Checking what we've done
+
+- Let's see if DockerCoins is working!
+
+.lab[
+
+- Check the logs of the worker:
+  ```bash
+  stern worker
+  ```
+
+- Look at the resources that were created:
+  ```bash
+  kubectl get all
+  ```
+
+]
+
+There are *many* issues to fix!
+
+.debug[[k8s/helm-create-better-chart.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-create-better-chart.md)]
+---
+
+## Can't pull image
+
+- It looks like our images can't be found
+
+.lab[
+
+- Use `kubectl describe` on any of the pods in error
+
+]
+
+- We're trying to pull `rng:1.16.0` instead of `rng:v0.1`!
+
+- Where does that `1.16.0` tag come from?
+
+.debug[[k8s/helm-create-better-chart.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-create-better-chart.md)]
+---
+
+## Inspecting our template
+
+- Let's look at the `templates/` directory
+
+  (and try to find the one generating the Deployment resource)
+
+.lab[
+
+- Show the structure of the `helmcoins` chart that Helm generated:
+  ```bash
+  tree helmcoins
+  ```
+
+- Check the file `helmcoins/templates/deployment.yaml`
+
+- Look for the `image:` parameter
+
+]
+
+*The image tag references `{{ .Chart.AppVersion }}`. Where does that come from?*
+
+.debug[[k8s/helm-create-better-chart.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-create-better-chart.md)]
+---
+
+## The `.Chart` variable
+
+- `.Chart` is a map corresponding to the values in `Chart.yaml`
+
+- Let's look for `AppVersion` there!
+
+.lab[
+
+- Check the file `helmcoins/Chart.yaml`
+
+- Look for the `appVersion:` parameter
+
+]
+
+(Yes, the case is different between the template and the Chart file.)
+
+.debug[[k8s/helm-create-better-chart.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-create-better-chart.md)]
+---
+
+## Using the correct tags
+
+- If we change `AppVersion` to `v0.1`, it will change for *all* deployments
+
+  (including redis)
+
+- Instead, let's change the *template* to use `{{ .Values.image.tag }}`
+
+  (to match what we've specified in our values YAML files)
+
+.lab[
+
+- Edit `helmcoins/templates/deployment.yaml`
+
+- Replace `{{ .Chart.AppVersion }}` with `{{ .Values.image.tag }}`
+
+]
+
+.debug[[k8s/helm-create-better-chart.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-create-better-chart.md)]
+---
+
+## Upgrading to use the new template
+
+- Technically, we just made a new version of the *chart*
+
+- To use the new template, we need to *upgrade* the release to use that chart
+
+.lab[
+
+- Upgrade all components:
+  ```bash
+    for COMPONENT in hasher redis rng webui worker; do
+      helm upgrade $COMPONENT helmcoins
+    done
+  ```
+
+- Check how our pods are doing:
+  ```bash
+  kubectl get pods
+  ```
+
+]
+
+We should see all pods "Running". But ... not all of them are READY.
+
+.debug[[k8s/helm-create-better-chart.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-create-better-chart.md)]
+---
+
+## Troubleshooting readiness
+
+- `hasher`, `rng`, `webui` should show up as `1/1 READY`
+
+- But `redis` and `worker` should show up as `0/1 READY`
+
+- Why?
+
+.debug[[k8s/helm-create-better-chart.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-create-better-chart.md)]
+---
+
+## Troubleshooting pods
+
+- The easiest way to troubleshoot pods is to look at *events*
+
+- We can look at all the events on the cluster (with `kubectl get events`)
+
+- Or we can use `kubectl describe` on the objects that have problems
+
+  (`kubectl describe` will retrieve the events related to the object)
+
+.lab[
+
+- Check the events for the redis pods:
+  ```bash
+  kubectl describe pod -l app.kubernetes.io/name=redis
+  ```
+
+]
+
+It's failing both its liveness and readiness probes!
+
+.debug[[k8s/helm-create-better-chart.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-create-better-chart.md)]
+---
+
+## Healthchecks
+
+- The default chart defines healthchecks doing HTTP requests on port 80
+
+- That won't work for redis and worker
+
+  (redis is not HTTP, and not on port 80; worker doesn't even listen)
+
+--
+
+- We could remove or comment out the healthchecks
+
+- We could also make them conditional
+
+- This sounds more interesting, let's do that!
+
+.debug[[k8s/helm-create-better-chart.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-create-better-chart.md)]
+---
+
+## Conditionals
+
+- We need to enclose the healthcheck block with:
+
+  `{{ if false }}` at the beginning (we can change the condition later)
+
+  `{{ end }}` at the end
+
+.lab[
+
+- Edit `helmcoins/templates/deployment.yaml`
+
+- Add `{{ if false }}` on the line before `livenessProbe`
+
+- Add `{{ end }}` after the `readinessProbe` section
+
+  (see next slide for details)
+
+]
+
+.debug[[k8s/helm-create-better-chart.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-create-better-chart.md)]
+---
+
+This is what the new YAML should look like (added lines in yellow):
+
+```yaml
+        ports:
+          - name: http
+            containerPort: 80
+            protocol: TCP
+        `{{ if false }}`
+        livenessProbe:
+          httpGet:
+            path: /
+            port: http
+        readinessProbe:
+          httpGet:
+            path: /
+            port: http
+        `{{ end }}`
+        resources:
+          {{- toYaml .Values.resources | nindent 12 }}
+```
+
+.debug[[k8s/helm-create-better-chart.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-create-better-chart.md)]
+---
+
+## Testing the new chart
+
+- We need to upgrade all the services again to use the new chart
+
+.lab[
+
+- Upgrade all components:
+  ```bash
+    for COMPONENT in hasher redis rng webui worker; do
+      helm upgrade $COMPONENT helmcoins
+    done
+  ```
+
+- Check how our pods are doing:
+  ```bash
+  kubectl get pods
+  ```
+
+]
+
+Everything should now be running!
+
+.debug[[k8s/helm-create-better-chart.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-create-better-chart.md)]
+---
+
+## What's next?
+
+- Is this working now?
+
+.lab[
+
+- Let's check the logs of the worker:
+  ```bash
+  stern worker
+  ```
+
+]
+
+This error might look familiar ... The worker can't resolve `redis`.
+
+Typically, that error means that the `redis` service doesn't exist.
+
+.debug[[k8s/helm-create-better-chart.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-create-better-chart.md)]
+---
+
+## Checking services
+
+- What about the services created by our chart?
+
+.lab[
+
+- Check the list of services:
+  ```bash
+  kubectl get services
+  ```
+
+]
+
+They are named `COMPONENT-helmcoins` instead of just `COMPONENT`.
+
+We need to change that!
+
+.debug[[k8s/helm-create-better-chart.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-create-better-chart.md)]
+---
+
+## Where do the service names come from?
+
+- Look at the YAML template used for the services
+
+- It should be using `{{ include "helmcoins.fullname" }}`
+
+- `include` indicates a *template block* defined somewhere else
+
+.lab[
+
+- Find where that `fullname` thing is defined:
+  ```bash
+  grep define.*fullname helmcoins/templates/*
+  ```
+
+]
+
+It should be in `_helpers.tpl`.
+
+We can look at the definition, but it's fairly complex ...
+
+.debug[[k8s/helm-create-better-chart.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-create-better-chart.md)]
+---
+
+## Changing service names
+
+- Instead of that `{{ include }}` tag, let's use the name of the release
+
+- The name of the release is available as `{{ .Release.Name }}`
+
+.lab[
+
+- Edit `helmcoins/templates/service.yaml`
+
+- Replace the service name with `{{ .Release.Name }}`
+
+- Upgrade all the releases to use the new chart
+
+- Confirm that the services now have the right names
+
+]
+
+.debug[[k8s/helm-create-better-chart.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-create-better-chart.md)]
+---
+
+## Is it working now?
+
+- If we look at the worker logs, it appears that the worker is still stuck
+
+- What could be happening?
+
+--
+
+- The redis service is not on port 80!
+
+- Let's see how the port number is set
+
+- We need to look at both the *deployment* template and the *service* template
+
+.debug[[k8s/helm-create-better-chart.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-create-better-chart.md)]
+---
+
+## Service template
+
+- In the service template, we have the following section:
+  ```yaml
+    ports:
+    - port: {{ .Values.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  ```
+
+- `port` is the port on which the service is "listening"
+
+  (i.e. to which our code needs to connect)
+
+- `targetPort` is the port on which the pods are listening
+
+- The `name` is not important (it's OK if it's `http` even for non-HTTP traffic)
+
+.debug[[k8s/helm-create-better-chart.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-create-better-chart.md)]
+---
+
+## Setting the redis port
+
+- Let's add a `service.port` value to the redis release
+
+.lab[
+
+- Edit `redis.yaml` to add:
+  ```yaml
+    service:
+      port: 6379
+  ```
+
+- Apply the new values file:
+  ```bash
+  helm upgrade redis helmcoins --values=redis.yaml
+  ```
+
+]
+
+.debug[[k8s/helm-create-better-chart.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-create-better-chart.md)]
+---
+
+## Deployment template
+
+- If we look at the deployment template, we see this section:
+  ```yaml
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+  ```
+
+- The container port is hard-coded to 80
+
+- We'll change it to use the port number specified in the values
+
+.debug[[k8s/helm-create-better-chart.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-create-better-chart.md)]
+---
+
+## Changing the deployment template
+
+.lab[  
+
+- Edit `helmcoins/templates/deployment.yaml`
+
+- The line with `containerPort` should be:
+  ```yaml
+  containerPort: {{ .Values.service.port }}
+  ```
+
+]
+
+.debug[[k8s/helm-create-better-chart.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-create-better-chart.md)]
+---
+
+## Apply changes
+
+- Re-run the for loop to execute `helm upgrade` one more time
+
+- Check the worker logs
+
+- This time, it should be working!
+
+.debug[[k8s/helm-create-better-chart.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-create-better-chart.md)]
+---
+
+## Extra steps
+
+- We don't need to create a service for the worker
+
+- We can put the whole service block in a conditional
+
+  (this will require additional changes in other files referencing the service)
+
+- We can set the webui to be a NodePort service
+
+- We can change the number of workers with `replicaCount`
+
+- And much more!
+
+???
+
+:EN:- Writing better Helm charts for app components
+:FR:- Écriture de *charts* composant par composant
+
+.debug[[k8s/helm-create-better-chart.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-create-better-chart.md)]
+---
+
+class: pic
+
+.interstitial[![Image separating from the next part](https://gallant-turing-d0d520.netlify.com/containers/container-housing.jpg)]
+
+---
+
+name: toc-charts-using-other-charts
+class: title
+
+ Charts using other charts
+
+.nav[
+[Previous part](#toc-creating-better-helm-charts)
+|
+[Back to table of contents](#toc-part-3)
+|
+[Next part](#toc-helm-and-invalid-values)
+]
+
+.debug[(automatically generated title slide)]
+
+---
+# Charts using other charts
+
+- Helm charts can have *dependencies* on other charts
+
+- These dependencies will help us to share or reuse components
+
+  (so that we write and maintain less manifests, less templates, less code!)
+
+- As an example, we will use a community chart for Redis
+
+- This will help people who write charts, and people who use them
+
+- ... And potentially remove a lot of code! ✌️
+
+.debug[[k8s/helm-dependencies.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-dependencies.md)]
+---
+
+## Redis in DockerCoins
+
+- In the DockerCoins demo app, we have 5 components:
+
+  - 2 internal webservices
+  - 1 worker
+  - 1 public web UI
+  - 1 Redis data store
+
+- Every component is running some custom code, except Redis
+
+- Every component is using a custom image, except Redis
+
+  (which is using the official `redis` image)
+
+- Could we use a standard chart for Redis?
+
+- Yes! Dependencies to the rescue!
+
+.debug[[k8s/helm-dependencies.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-dependencies.md)]
+---
+
+## Adding our dependency
+
+- First, we will add the dependency to the `Chart.yaml` file
+
+- Then, we will ask Helm to download that dependency
+
+- We will also *lock* the dependency
+
+  (lock it to a specific version, to ensure reproducibility)
+
+.debug[[k8s/helm-dependencies.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-dependencies.md)]
+---
+
+## Declaring the dependency
+
+- First, let's edit `Chart.yaml`
+
+.lab[
+
+- In `Chart.yaml`, fill the `dependencies` section:
+  ```yaml
+    dependencies:
+      - name: redis
+        version: 11.0.5
+        repository: https://charts.bitnami.com/bitnami
+        condition: redis.enabled
+  ```
+
+]
+
+Where do that `repository` and `version` come from?
+
+We're assuming here that we did our reserach,
+or that our resident Helm expert advised us to
+use Bitnami's Redis chart.
+
+.debug[[k8s/helm-dependencies.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-dependencies.md)]
+---
+
+## Conditions
+
+- The `condition` field gives us a way to enable/disable the dependency:
+  ```yaml
+  conditions: redis.enabled
+  ```
+
+- Here, we can disable Redis with the Helm flag `--set redis.enabled=false`
+
+  (or set that value in a `values.yaml` file)
+
+- Of course, this is mostly useful for *optional* dependencies
+
+  (otherwise, the app ends up being broken since it'll miss a component)
+
+.debug[[k8s/helm-dependencies.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-dependencies.md)]
+---
+
+## Lock & Load!
+
+- After adding the dependency, we ask Helm to pin an download it
+
+.lab[
+
+- Ask Helm:
+  ```bash
+  helm dependency update
+  ```
+
+  (Or `helm dep up`)
+
+]
+
+- This wil create `Chart.lock` and fetch the dependency
+
+.debug[[k8s/helm-dependencies.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-dependencies.md)]
+---
+
+## What's `Chart.lock`?
+
+- This is a common pattern with dependencies
+
+  (see also: `Gemfile.lock`, `package.json.lock`, and many others)
+
+- This lets us define loose dependencies in `Chart.yaml`
+
+  (e.g. "version 11.whatever, but below 12")
+
+- But have the exact version used in `Chart.lock`
+
+- This ensures reproducible deployments
+
+- `Chart.lock` can (should!) be added to our source tree
+
+- `Chart.lock` can (should!) regularly be updated
+
+.debug[[k8s/helm-dependencies.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-dependencies.md)]
+---
+
+## Loose dependencies
+
+- Here is an example of loose version requirement:
+  ```yaml
+    dependencies:
+      - name: redis
+        version: ">=11, <12"
+        repository: https://charts.bitnami.com/bitnami
+  ```
+
+- This makes sure that we have the most recent version in the 11.x train
+
+- ... But without upgrading to version 12.x
+
+  (because it might be incompatible)
+
+.debug[[k8s/helm-dependencies.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-dependencies.md)]
+---
+
+## `build` vs `update`
+
+- Helm actually offers two commands to manage dependencies:
+
+  `helm dependency build` = fetch dependencies listed in `Chart.lock`
+
+  `helm dependency update` = update `Chart.lock` (and run `build`)
+
+- When the dependency gets updated, we can/should:
+
+  - `helm dep up` (update `Chart.lock` and fetch new chart)
+
+  - test!
+
+  - if everything is fine, `git add Chart.lock` and commit
+
+.debug[[k8s/helm-dependencies.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-dependencies.md)]
+---
+
+## Where are my dependencies?
+
+- Dependencies are downloaded to the `charts/` subdirectory
+
+- When they're downloaded, they stay in compressed format (`.tgz`)
+
+- Should we commit them to our code repository?
+
+- Pros:
+
+  - more resilient to internet/mirror failures/decomissioning
+
+- Cons:
+
+  - can add a lot of weight to the repo if charts are big or change often
+
+  - this can be solved by extra tools like git-lfs
+
+.debug[[k8s/helm-dependencies.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-dependencies.md)]
+---
+
+## Dependency tuning
+
+- DockerCoins expects the `redis` Service to be named `redis`
+
+- Our Redis chart uses a different Service name by default
+
+- Service name is `{{ template "redis.fullname" . }}-master`
+
+- `redis.fullname` looks like this:
+  ```
+    {{- define "redis.fullname" -}}
+    {{- if .Values.fullnameOverride -}}
+    {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" -}}
+    {{- else -}}
+    [...]
+    {{- end }}
+    {{- end }}
+  ```
+
+- How do we fix this?
+
+.debug[[k8s/helm-dependencies.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-dependencies.md)]
+---
+
+## Setting dependency variables
+
+- If we set `fullnameOverride` to `redis`:
+
+  - the `{{ template ... }}` block will output `redis`
+
+  - the Service name will be `redis-master`
+
+- A parent chart can set values for its dependencies
+
+- For example, in the parent's `values.yaml`:
+
+  ```yaml
+    redis:                    # Name of the dependency
+      fullnameOverride: redis # Value passed to redis
+      cluster:                # Other values passed to redis
+        enabled: false
+  ```
+
+- User can also set variables with `--set=` or with `--values=`
+
+.debug[[k8s/helm-dependencies.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-dependencies.md)]
+---
+
+class: extra-details
+
+## Passing templates
+
+- We can even pass template `{{ include "template.name" }}`, but warning:
+
+   - need to be evaluated with the `tpl` function, on the child side
+
+   - evaluated in the context of the child, with no access to parent variables
+
+<!-- FIXME this probably deserves an example, but I can't imagine one right now 😅 -->
+
+.debug[[k8s/helm-dependencies.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-dependencies.md)]
+---
+
+## Getting rid of the `-master`
+
+- Even if we set that `fullnameOverride`, the Service name will be `redis-master`
+
+- To remove the `-master` suffix, we need to edit the chart itself
+
+- To edit the Redis chart, we need to *embed* it in our own chart
+
+- We need to:
+
+  - decompress the chart
+
+  - adjust `Chart.yaml` accordingly
+
+.debug[[k8s/helm-dependencies.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-dependencies.md)]
+---
+
+## Embedding a dependency
+
+.lab[
+
+- Decompress the chart:
+  ```yaml
+  cd charts
+  tar zxf redis-*.tgz
+  cd ..
+  ```
+
+- Edit `Chart.yaml` and update the `dependencies` section:
+  ```yaml
+    dependencies:
+      - name: redis
+        version: '*' # No need to constraint version, from local files
+  ```
+
+- Run `helm dep update`
+
+]
+
+.debug[[k8s/helm-dependencies.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-dependencies.md)]
+---
+
+## Updating the dependency
+
+- Now we can edit the Service name
+
+  (it should be in `charts/redis/templates/redis-master-svc.yaml`)
+
+- Then try to deploy the whole chart!
+
+.debug[[k8s/helm-dependencies.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-dependencies.md)]
+---
+
+## Embedding a dependency multiple times
+
+- What if we need multiple copies of the same subchart?
+
+  (for instance, if we need two completely different Redis servers)
+
+- We can declare a dependency multiple times, and specify an `alias`:
+  ```yaml
+  dependencies:
+    - name: redis
+      version: '*'
+      alias: querycache
+    - name: redis
+      version: '*'
+      alias: celeryqueue
+  ```
+
+- `.Chart.Name` will be set to the `alias`
+
+.debug[[k8s/helm-dependencies.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-dependencies.md)]
+---
+
+class: extra-details
+
+## Compatibility with Helm 2
+
+- Chart `apiVersion: v1` is the only version supported by Helm 2
+
+- Chart v1 is also supported by Helm 3
+
+- Use v1 if you want to be compatible with Helm 2
+
+- Instead of `Chart.yaml`, dependencies are defined in `requirements.yaml`
+
+  (and we should commit `requirements.lock` instead of `Chart.lock`)
+
+???
+
+:EN:- Depending on other charts
+:EN:- Charts within charts
+
+:FR:- Dépendances entre charts
+:FR:- Un chart peut en cacher un autre
+
+.debug[[k8s/helm-dependencies.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-dependencies.md)]
+---
+
+class: pic
+
+.interstitial[![Image separating from the next part](https://gallant-turing-d0d520.netlify.com/containers/containers-by-the-water.jpg)]
+
+---
+
+name: toc-helm-and-invalid-values
+class: title
+
+ Helm and invalid values
+
+.nav[
+[Previous part](#toc-charts-using-other-charts)
+|
+[Back to table of contents](#toc-part-3)
+|
+[Next part](#toc-helm-secrets)
+]
+
+.debug[(automatically generated title slide)]
+
+---
+# Helm and invalid values
+
+- A lot of Helm charts let us specify an image tag like this:
+  ```bash
+  helm install ... --set image.tag=v1.0
+  ```
+
+- What happens if we make a small mistake, like this:
+  ```bash
+  helm install ... --set imagetag=v1.0
+  ```
+
+- Or even, like this:
+  ```bash
+  helm install ... --set image=v1.0
+  ```
+
+🤔
+
+.debug[[k8s/helm-values-schema-validation.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-values-schema-validation.md)]
+---
+
+## Making mistakes
+
+- In the first case:
+
+  - we set `imagetag=v1.0` instead of `image.tag=v1.0`
+
+  - Helm will ignore that value (if it's not used anywhere in templates)
+
+  - the chart is deployed with the default value instead
+
+- In the second case:
+
+  - we set `image=v1.0` instead of `image.tag=v1.0`
+
+  - `image` will be a string instead of an object
+
+  - Helm will *probably* fail when trying to evaluate `image.tag`
+
+.debug[[k8s/helm-values-schema-validation.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-values-schema-validation.md)]
+---
+
+## Preventing mistakes
+
+- To prevent the first mistake, we need to tell Helm:
+
+  *"let me know if any additional (unknown) value was set!"*
+
+- To prevent the second mistake, we need to tell Helm:
+
+  *"`image` should be an object, and `image.tag` should be a string!"*
+
+- We can do this with *values schema validation*
+
+.debug[[k8s/helm-values-schema-validation.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-values-schema-validation.md)]
+---
+
+## Helm values schema validation
+
+- We can write a spec representing the possible values accepted by the chart
+
+- Helm will check the validity of the values before trying to install/upgrade
+
+- If it finds problems, it will stop immediately
+
+- The spec uses [JSON Schema](https://json-schema.org/):
+
+  *JSON Schema is a vocabulary that allows you to annotate and validate JSON documents.*
+
+- JSON Schema is designed for JSON, but can easily work with YAML too
+
+  (or any language with `map|dict|associativearray` and `list|array|sequence|tuple`)
+
+.debug[[k8s/helm-values-schema-validation.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-values-schema-validation.md)]
+---
+
+## In practice
+
+- We need to put the JSON Schema spec in a file called `values.schema.json`
+
+  (at the root of our chart; right next to `values.yaml` etc.)
+
+- The file is optional
+
+- We don't need to register or declare it in `Chart.yaml` or anywhere
+
+- Let's write a schema that will verify that ...
+
+  - `image.repository` is an official image (string without slashes or dots)
+
+  - `image.pullPolicy` can only be `Always`, `Never`, `IfNotPresent`
+
+.debug[[k8s/helm-values-schema-validation.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-values-schema-validation.md)]
+---
+
+## `values.schema.json`
+
+```json
+{
+  "$schema": "http://json-schema.org/schema#",
+  "type": "object",
+  "properties": {
+    "image": {
+      "type": "object",
+      "properties": {
+        "repository": {
+          "type": "string",
+          "pattern": "^[a-z0-9-_]+$"
+        },
+        "pullPolicy": {
+          "type": "string",
+          "pattern": "^(Always|Never|IfNotPresent)$"
+        }
+      } 
+    } 
+  } 
+}
+```
+
+.debug[[k8s/helm-values-schema-validation.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-values-schema-validation.md)]
+---
+
+## Testing our schema
+
+- Let's try to install a couple releases with that schema!
+
+.lab[
+
+- Try an invalid `pullPolicy`:
+  ```bash
+  helm install broken --set image.pullPolicy=ShallNotPass
+  ```
+
+- Try an invalid value:
+  ```bash
+  helm install should-break --set ImAgeTAg=toto
+  ```
+
+]
+
+- The first one fails, but the second one still passes ...
+
+- Why?
+
+.debug[[k8s/helm-values-schema-validation.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-values-schema-validation.md)]
+---
+
+## Bailing out on unkown properties
+
+- We told Helm what properties (values) were valid
+
+- We didn't say what to do about additional (unknown) properties!
+
+- We can fix that with `"additionalProperties": false`
+
+.lab[
+
+- Edit `values.schema.json` to add `"additionalProperties": false`
+  ```json
+    {
+      "$schema": "http://json-schema.org/schema#",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+      ...
+  ```
+
+]
+
+.debug[[k8s/helm-values-schema-validation.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-values-schema-validation.md)]
+---
+
+## Testing with unknown properties
+
+.lab[
+
+- Try to pass an extra property:
+  ```bash
+  helm install should-break --set ImAgeTAg=toto
+  ```
+
+- Try to pass an extra nested property:
+  ```bash
+  helm install does-it-work --set image.hello=world
+  ```
+
+]
+
+The first command should break.
+
+The second will not.
+
+`"additionalProperties": false` needs to be specified at each level.
+
+???
+
+:EN:- Helm schema validation
+:FR:- Validation de schema Helm
+
+.debug[[k8s/helm-values-schema-validation.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-values-schema-validation.md)]
+---
+
+class: pic
+
+.interstitial[![Image separating from the next part](https://gallant-turing-d0d520.netlify.com/containers/distillery-containers.jpg)]
+
+---
+
+name: toc-helm-secrets
+class: title
+
+ Helm secrets
+
+.nav[
+[Previous part](#toc-helm-and-invalid-values)
+|
+[Back to table of contents](#toc-part-3)
+|
+[Next part](#toc-cert-manager)
+]
+
+.debug[(automatically generated title slide)]
+
+---
+# Helm secrets
+
+- Helm can do *rollbacks*:
+
+  - to previously installed charts
+
+  - to previous sets of values
+
+- How and where does it store the data needed to do that?
+
+- Let's investigate!
+
+.debug[[k8s/helm-secrets.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-secrets.md)]
+---
+
+## Adding the repo
+
+- If you haven't done it before, you need to add the repo for that chart
+
+.lab[
+
+- Add the repo that holds the chart for the OWASP Juice Shop:
+  ```bash
+  helm repo add juice https://charts.securecodebox.io
+  ```
+
+]
+
+.debug[[k8s/helm-secrets.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-secrets.md)]
+---
+
+## We need a release
+
+- We need to install something with Helm
+
+- Let's use the `juice/juice-shop` chart as an example
+
+.lab[
+
+- Install a release called `orange` with the chart `juice/juice-shop`:
+  ```bash
+  helm upgrade orange juice/juice-shop --install
+  ```
+
+- Let's upgrade that release, and change a value:
+  ```bash
+  helm upgrade orange juice/juice-shop --set ingress.enabled=true
+  ```
+
+]
+
+.debug[[k8s/helm-secrets.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-secrets.md)]
+---
+
+## Release history
+
+- Helm stores successive revisions of each release
+
+.lab[
+
+- View the history for that release:
+  ```bash
+  helm history orange
+  ```
+
+]
+
+Where does that come from?
+
+.debug[[k8s/helm-secrets.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-secrets.md)]
+---
+
+## Investigate
+
+- Possible options:
+
+  - local filesystem (no, because history is visible from other machines)
+
+  - persistent volumes (no, Helm works even without them)
+
+  - ConfigMaps, Secrets?
+
+.lab[
+
+- Look for ConfigMaps and Secrets:
+  ```bash
+  kubectl get configmaps,secrets
+  ```
+
+]
+
+--
+
+We should see a number of secrets with TYPE `helm.sh/release.v1`.
+
+.debug[[k8s/helm-secrets.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-secrets.md)]
+---
+
+## Unpacking a secret
+
+- Let's find out what is in these Helm secrets
+
+.lab[
+
+- Examine the secret corresponding to the second release of `orange`:
+  ```bash
+  kubectl describe secret sh.helm.release.v1.orange.v2
+  ```
+  (`v1` is the secret format; `v2` means revision 2 of the `orange` release)
+
+]
+
+There is a key named `release`.
+
+.debug[[k8s/helm-secrets.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-secrets.md)]
+---
+
+## Unpacking the release data
+
+- Let's see what's in this `release` thing!
+
+.lab[
+
+- Dump the secret:
+  ```bash
+  kubectl get secret sh.helm.release.v1.orange.v2 \
+      -o go-template='{{ .data.release }}'
+  ```
+
+]
+
+Secrets are encoded in base64. We need to decode that!
+
+.debug[[k8s/helm-secrets.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-secrets.md)]
+---
+
+## Decoding base64
+
+- We can pipe the output through `base64 -d` or use go-template's `base64decode`
+
+.lab[
+
+- Decode the secret:
+  ```bash
+  kubectl get secret sh.helm.release.v1.orange.v2 \
+      -o go-template='{{ .data.release | base64decode }}'
+  ```
+
+]
+
+--
+
+... Wait, this *still* looks like base64. What's going on?
+
+--
+
+Let's try one more round of decoding!
+
+.debug[[k8s/helm-secrets.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-secrets.md)]
+---
+
+## Decoding harder
+
+- Just add one more base64 decode filter
+
+.lab[
+
+- Decode it twice:
+  ```bash
+  kubectl get secret sh.helm.release.v1.orange.v2 \
+      -o go-template='{{ .data.release | base64decode | base64decode }}'
+  ```
+
+]
+
+--
+
+... OK, that was *a lot* of binary data. What sould we do with it?
+
+.debug[[k8s/helm-secrets.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-secrets.md)]
+---
+
+## Guessing data type
+
+- We could use `file` to figure out the data type
+
+.lab[
+
+- Pipe the decoded release through `file -`:
+  ```bash
+  kubectl get secret sh.helm.release.v1.orange.v2 \
+      -o go-template='{{ .data.release | base64decode | base64decode }}' \
+      | file -
+  ```
+
+]
+
+--
+
+Gzipped data! It can be decoded with `gunzip -c`.
+
+.debug[[k8s/helm-secrets.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-secrets.md)]
+---
+
+## Uncompressing the data
+
+- Let's uncompress the data and save it to a file
+
+.lab[
+
+- Rerun the previous command, but with `| gunzip -c > release-info` :
+  ```bash
+  kubectl get secret sh.helm.release.v1.orange.v2 \
+      -o go-template='{{ .data.release | base64decode | base64decode }}' \
+      | gunzip -c > release-info
+  ```
+
+- Look at `release-info`:
+  ```bash
+  cat release-info
+  ```
+
+]
+
+--
+
+It's a bundle of ~~YAML~~ JSON.
+
+.debug[[k8s/helm-secrets.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-secrets.md)]
+---
+
+## Looking at the JSON
+
+If we inspect that JSON (e.g. with `jq keys release-info`), we see:
+
+- `chart` (contains the entire chart used for that release)
+- `config` (contains the values that we've set)
+- `info` (date of deployment, status messages)
+- `manifest` (YAML generated from the templates)
+- `name` (name of the release, so `orange`)
+- `namespace` (namespace where we deployed the release)
+- `version` (revision number within that release; starts at 1)
+
+The chart is in a structured format, but it's entirely captured in this JSON.
+
+.debug[[k8s/helm-secrets.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-secrets.md)]
+---
+
+## Conclusions
+
+- Helm stores each release information in a Secret in the namespace of the release
+
+- The secret is JSON object (gzipped and encoded in base64)
+
+- It contains the manifests generated for that release
+
+- ... And everything needed to rebuild these manifests
+
+  (including the full source of the chart, and the values used)
+
+- This allows arbitrary rollbacks, as well as tweaking values even without having access to the source of the chart (or the chart repo) used for deployment
+
+???
+
+:EN:- Deep dive into Helm internals
+:FR:- Fonctionnement interne de Helm
+
+.debug[[k8s/helm-secrets.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/helm-secrets.md)]
+---
+
+class: pic
+
+.interstitial[![Image separating from the next part](https://gallant-turing-d0d520.netlify.com/containers/lots-of-containers.jpg)]
+
+---
+
+name: toc-cert-manager
+class: title
+
+ cert-manager
+
+.nav[
+[Previous part](#toc-helm-secrets)
+|
+[Back to table of contents](#toc-part-4)
+|
+[Next part](#toc-cicd-with-gitlab)
+]
+
+.debug[(automatically generated title slide)]
+
+---
+# cert-manager
+
+- cert-manager¹ facilitates certificate signing through the Kubernetes API:
+
+  - we create a Certificate object (that's a CRD)
+
+  - cert-manager creates a private key
+
+  - it signs that key ...
+
+  - ... or interacts with a certificate authority to obtain the signature
+
+  - it stores the resulting key+cert in a Secret resource
+
+- These Secret resources can be used in many places (Ingress, mTLS, ...)
+
+.footnote[.red[¹]Always lower case, words separated with a dash; see the [style guide](https://cert-manager.io/docs/faq/style/_.)]
+
+.debug[[k8s/cert-manager.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/cert-manager.md)]
+---
+
+## Getting signatures
+
+- cert-manager can use multiple *Issuers* (another CRD), including:
+
+  - self-signed
+
+  - cert-manager acting as a CA
+
+  - the [ACME protocol](https://en.wikipedia.org/wiki/Automated_Certificate_Management_Environment]) (notably used by Let's Encrypt)
+
+  - [HashiCorp Vault](https://www.vaultproject.io/)
+
+- Multiple issuers can be configured simultaneously
+
+- Issuers can be available in a single namespace, or in the whole cluster
+
+  (then we use the *ClusterIssuer* CRD)
+
+.debug[[k8s/cert-manager.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/cert-manager.md)]
+---
+
+## cert-manager in action
+
+- We will install cert-manager
+
+- We will create a ClusterIssuer to obtain certificates with Let's Encrypt
+
+  (this will involve setting up an Ingress Controller)
+
+- We will create a Certificate request
+
+- cert-manager will honor that request and create a TLS Secret
+
+.debug[[k8s/cert-manager.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/cert-manager.md)]
+---
+
+## Installing cert-manager
+
+- It can be installed with a YAML manifest, or with Helm
+
+.lab[
+
+- Let's install the cert-manager Helm chart with this one-liner:
+  ```bash
+    helm install cert-manager cert-manager \
+        --repo https://charts.jetstack.io \
+        --create-namespace --namespace cert-manager \
+        --set installCRDs=true
+  ```
+
+]
+
+- If you prefer to install with a single YAML file, that's fine too!
+
+  (see [the documentation](https://cert-manager.io/docs/installation/kubernetes/#installing-with-regular-manifests) for instructions)
+
+.debug[[k8s/cert-manager.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/cert-manager.md)]
+---
+
+## ClusterIssuer manifest
+
+```yaml
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-staging
+spec:
+  acme:
+    # Remember to update this if you use this manifest to obtain real certificates :)
+    email: hello@example.com
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+    # To use the production environment, use the following line instead:
+    #server: https://acme-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: issuer-letsencrypt-staging
+    solvers:
+    - http01:
+        ingress:
+          class: traefik
+
+
+```
+
+.debug[[k8s/cert-manager.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/cert-manager.md)]
+---
+
+## Creating the ClusterIssuer
+
+- The manifest shown on the previous slide is in [k8s/cm-clusterissuer.yaml](https://github.com/denisgaudare/container.training/tree/master/k8s/cm-clusterissuer.yaml)
+
+.lab[
+
+- Create the ClusterIssuer:
+  ```bash
+  kubectl apply -f ~/container.training/k8s/cm-clusterissuer.yaml
+  ```
+
+]
+
+.debug[[k8s/cert-manager.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/cert-manager.md)]
+---
+
+## Certificate manifest
+
+```yaml
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: xyz.A.B.C.D.nip.io
+spec:
+  secretName: xyz.A.B.C.D.nip.io
+  dnsNames:
+  - xyz.A.B.C.D.nip.io
+  issuerRef:
+    name: letsencrypt-staging
+    kind: ClusterIssuer
+
+```
+
+- The `name`, `secretName`, and `dnsNames` don't have to match
+
+- There can be multiple `dnsNames`
+
+- The `issuerRef` must match the ClusterIssuer that we created earlier
+
+.debug[[k8s/cert-manager.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/cert-manager.md)]
+---
+
+## Creating the Certificate
+
+- The manifest shown on the previous slide is in [k8s/cm-certificate.yaml](https://github.com/denisgaudare/container.training/tree/master/k8s/cm-certificate.yaml)
+
+.lab[
+
+- Edit the Certificate to update the domain name
+
+  (make sure to replace A.B.C.D with the IP address of one of your nodes!)
+
+- Create the Certificate:
+  ```bash
+  kubectl apply -f ~/container.training/k8s/cm-certificate.yaml
+  ```
+
+]
+
+.debug[[k8s/cert-manager.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/cert-manager.md)]
+---
+
+## What's happening?
+
+- cert-manager will create:
+
+  - the secret key
+
+  - a Pod, a Service, and an Ingress to complete the HTTP challenge
+
+- then it waits for the challenge to complete
+
+.lab[
+
+- View the resources created by cert-manager:
+  ```bash
+    kubectl get pods,services,ingresses \
+            --selector=acme.cert-manager.io/http01-solver=true
+  ```
+
+]
+
+.debug[[k8s/cert-manager.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/cert-manager.md)]
+---
+
+## HTTP challenge
+
+- The CA (in this case, Let's Encrypt) will fetch a particular URL:
+
+  `http://<our-domain>/.well-known/acme-challenge/<token>`
+
+.lab[
+
+- Check the *path* of the Ingress in particular:
+  ```bash
+    kubectl describe ingress 
+            --selector=acme.cert-manager.io/http01-solver=true
+  ```
+
+]
+
+.debug[[k8s/cert-manager.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/cert-manager.md)]
+---
+
+## What's missing ?
+
+--
+
+An Ingress Controller! 😅
+
+.lab[
+
+- Install an Ingress Controller:
+  ```bash
+  kubectl apply -f ~/container.training/k8s/traefik-v2.yaml
+  ```
+
+- Wait a little bit, and check that we now have a `kubernetes.io/tls` Secret:
+  ```bash
+  kubectl get secrets
+  ```
+
+]
+
+.debug[[k8s/cert-manager.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/cert-manager.md)]
+---
+
+class: extra-details
+
+## Using the secret
+
+- For bonus points, try to use the secret in an Ingress!
+
+- This is what the manifest would look like:
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: xyz
+spec:
+  tls:
+  - secretName: xyz.A.B.C.D.nip.io
+    hosts:
+    - xyz.A.B.C.D.nip.io
+  rules:
+  ...
+```
+
+.debug[[k8s/cert-manager.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/cert-manager.md)]
+---
+
+class: extra-details
+
+## Automatic TLS Ingress with annotations
+
+- It is also possible to annotate Ingress resources for cert-manager
+
+- If we annotate an Ingress resource with `cert-manager.io/cluster-issuer=xxx`:
+
+  - cert-manager will detect that annotation
+
+  - it will obtain a certificate using the specified ClusterIssuer (`xxx`)
+
+  - it will store the key and certificate in the specified Secret
+
+- Note: the Ingress still needs the `tls` section with `secretName` and `hosts`
+
+.debug[[k8s/cert-manager.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/cert-manager.md)]
+---
+
+class: extra-details
+
+## Let's Encrypt and nip.io
+
+- Let's Encrypt has [rate limits](https://letsencrypt.org/docs/rate-limits/) per domain
+
+  (the limits only apply to the production environment, not staging)
+
+- There is a limit of 50 certificates per registered domain
+
+- If we try to use the production environment, we will probably hit the limit
+
+- It's fine to use the staging environment for these experiments
+
+  (our certs won't validate in a browser, but we can always check
+  the details of the cert to verify that it was issued by Let's Encrypt!)
+
+???
+
+:EN:- Obtaining certificates with cert-manager
+:FR:- Obtenir des certificats avec cert-manager
+
+:T: Obtaining TLS certificates with cert-manager
+
+.debug[[k8s/cert-manager.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/cert-manager.md)]
+---
+
+class: pic
+
+.interstitial[![Image separating from the next part](https://gallant-turing-d0d520.netlify.com/containers/plastic-containers.JPG)]
+
+---
+
+name: toc-cicd-with-gitlab
+class: title
+
+ CI/CD with GitLab
+
+.nav[
+[Previous part](#toc-cert-manager)
+|
+[Back to table of contents](#toc-part-4)
+|
+[Next part](#toc-extra-content)
+]
+
+.debug[(automatically generated title slide)]
+
+---
+# CI/CD with GitLab
+
+- In this section, we will see how to set up a CI/CD pipeline with GitLab
+
+  (using a "self-hosted" GitLab; i.e. running on our Kubernetes cluster)
+
+- The big picture:
+
+  - each time we push code to GitLab, it will be deployed in a staging environment
+
+  - each time we push the `production` tag, it will be deployed in production
+
+.debug[[k8s/gitlab.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/gitlab.md)]
+---
+
+## Disclaimers
+
+- We'll use GitLab here as an example, but there are many other options
+
+  (e.g. some combination of Argo, Harbor, Tekton ...)
+
+- There are also hosted options
+
+  (e.g. GitHub Actions and many others)
+
+- We'll use a specific pipeline and workflow, but it's purely arbitrary
+
+  (treat it as a source of inspiration, not a model to be copied!)
+
+.debug[[k8s/gitlab.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/gitlab.md)]
+---
+
+## Workflow overview
+
+- Push code to GitLab's git server
+
+- GitLab notices the `.gitlab-ci.yml` file, which defines our pipeline
+
+- Our pipeline can have multiple *stages* executed sequentially
+
+  (e.g. lint, build, test, deploy ...)
+
+- Each stage can have multiple *jobs* executed in parallel
+
+  (e.g. build images in parallel)
+
+- Each job will be executed in an independent *runner* pod
+
+.debug[[k8s/gitlab.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/gitlab.md)]
+---
+
+## Pipeline overview
+
+- Our repository holds source code, Dockerfiles, and a Helm chart
+
+- *Lint* stage will check the Helm chart validity
+
+- *Build* stage will build container images
+
+  (and push them to GitLab's integrated registry)
+
+- *Deploy* stage will deploy the Helm chart, using these images
+
+- Pushes to `production` will deploy to "the" production namespace
+
+- Pushes to other tags/branches will deploy to a namespace created on the fly
+
+- We will discuss shortcomings and alternatives and the end of this chapter!
+
+.debug[[k8s/gitlab.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/gitlab.md)]
+---
+
+## Lots of requirements
+
+- We need *a lot* of components to pull this off:
+
+  - a domain name
+
+  - a storage class
+
+  - a TLS-capable ingress controller
+
+  - the cert-manager operator
+
+  - GitLab itself
+
+  - the GitLab pipeline
+
+- Wow, why?!?
+
+.debug[[k8s/gitlab.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/gitlab.md)]
+---
+
+## I find your lack of TLS disturbing
+
+- We need a container registry (obviously!)
+
+- Docker (and other container engines) *require* TLS on the registry
+
+  (with valid certificates)
+
+- A few options:
+
+  - use a "real" TLS certificate (e.g. obtained with Let's Encrypt)
+
+  - use a self-signed TLS certificate
+
+  - communicate with the registry over localhost (TLS isn't required then)
+
+.debug[[k8s/gitlab.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/gitlab.md)]
+---
+
+class: extra-details
+
+## Why not self-signed certs?
+
+- When using self-signed certs, we need to either:
+
+  - add the cert (or CA) to trusted certs
+
+  - disable cert validation
+
+- This needs to be done on *every client* connecting to the registry:
+
+  - CI/CD pipeline (building and pushing images)
+
+  - container engine (deploying the images)
+
+  - other tools (e.g. container security scanner)
+
+- It's doable, but it's a lot of hacks (especially when adding more tools!)
+
+.debug[[k8s/gitlab.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/gitlab.md)]
+---
+
+class: extra-details
+
+## Why not localhost?
+
+- TLS is usually not required when the registry is on localhost
+
+- We could expose the registry e.g. on a `NodePort`
+
+- ... And then tweak the CI/CD pipeline to use that instead
+
+- This is great when obtaining valid certs is difficult:
+
+  - air-gapped or internal environments (that can't use Let's Encrypt)
+
+  - no domain name available
+
+- Downside: the registry isn't easily or safely available from outside
+
+  (the `NodePort` essentially defeats TLS)
+
+.debug[[k8s/gitlab.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/gitlab.md)]
+---
+
+class: extra-details
+
+## Can we use `nip.io`?
+
+- We will use Let's Encrypt
+
+- Let's Encrypt has a quota of certificates per domain
+
+  (in 2020, that was [50 certificates per week per domain](https://letsencrypt.org/docs/rate-limits/))
+
+- So if we all use `nip.io`, we will probably run into that limit
+
+- But you can try and see if it works!
+
+.debug[[k8s/gitlab.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/gitlab.md)]
+---
+
+## Ingress
+
+- We will assume that we have a domain name pointing to our cluster
+
+  (i.e. with a wildcard record pointing to at least one node of the cluster)
+
+- We will get traffic in the cluster by leveraging `ExternalIPs` services
+
+  (but it would be easy to use `LoadBalancer` services instead)
+
+- We will use Traefik as the ingress controller
+
+  (but any other one should work too)
+
+- We will use cert-manager to obtain certificates with Let's Encrypt
+
+.debug[[k8s/gitlab.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/gitlab.md)]
+---
+
+## Other details
+
+- We will deploy GitLab with its official Helm chart
+
+- It will still require a bunch of parameters and customization
+
+- We also need a Storage Class
+
+  (unless our cluster already has one, of course)
+
+- We suggest the [Rancher local path provisioner](https://github.com/rancher/local-path-provisioner)
+
+.debug[[k8s/gitlab.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/gitlab.md)]
+---
+
+## Setting everything up
+
+1. `git clone https://github.com/denisgaudare/kubecoin`
+
+2. `export EMAIL=xxx@example.com DOMAIN=awesome-kube-ci.io`
+
+   (we need a real email address and a domain pointing to the cluster!)
+
+3. `. setup-gitlab-on-k8s.rc`
+
+   (this doesn't do anything, but defines a number of helper functions)
+
+4. Execute each helper function, one after another
+
+   (try `do_[TAB]` to see these functions)
+
+.debug[[k8s/gitlab.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/gitlab.md)]
+---
+
+## Local Storage
+
+`do_1_localstorage`
+
+Applies the YAML directly from Rancher's repository.
+
+Annotate the Storage Class so that it becomes the default one.
+
+.debug[[k8s/gitlab.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/gitlab.md)]
+---
+
+## Traefik
+
+`do_2_traefik_with_externalips`
+
+Install the official Traefik Helm chart.
+
+Instead of a `LoadBalancer` service, use a `ClusterIP` with `ExternalIPs`.
+
+Automatically infer the `ExternalIPs` from `kubectl get nodes`.
+
+Enable TLS.
+
+.debug[[k8s/gitlab.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/gitlab.md)]
+---
+
+## cert-manager
+
+`do_3_certmanager`
+
+Install cert-manager using their official YAML.
+
+Easy-peasy.
+
+.debug[[k8s/gitlab.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/gitlab.md)]
+---
+
+## Certificate issuers
+
+`do_4_issuers`
+
+Create a couple of `ClusterIssuer` resources for cert-manager.
+
+(One for the staging Let's Encrypt environment, one for production.)
+
+Note: this requires to specify a valid `$EMAIL` address!
+
+Note: if this fails, wait a bit and try again (cert-manager needs to be up).
+
+.debug[[k8s/gitlab.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/gitlab.md)]
+---
+
+## GitLab
+
+`do_5_gitlab`
+
+Deploy GitLab using their official Helm chart.
+
+We pass a lot of parameters to this chart:
+- the domain name to use
+- disable GitLab's own ingress and cert-manager
+- annotate the ingress resources so that cert-manager kicks in
+- bind the shell service (git over SSH) to port 222 to avoid conflict
+- use ExternalIPs for that shell service
+
+Note: on modest cloud instances, it can take 10 minutes for GitLab to come up.
+
+We can check the status with `kubectl get pods --namespace=gitlab`
+
+.debug[[k8s/gitlab.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/gitlab.md)]
+---
+
+## Log into GitLab and configure it
+
+`do_6_showlogin`
+
+This will get the GitLab root password (stored in a Secret).
+
+Then we need to:
+- log into GitLab
+- add our SSH key (top-right user menu → settings, then SSH keys on the left)
+- create a project (using the + menu next to the search bar on top)
+- go to project configuration (on the left, settings → CI/CD)
+- add a `KUBECONFIG` file variable with the content of our `.kube/config` file
+- go to settings → access tokens to create a read-only registry token
+- add variables `REGISTRY_USER` and `REGISTRY_PASSWORD` with that token
+- push our repo (`git remote add gitlab ...` then `git push gitlab ...`)
+
+.debug[[k8s/gitlab.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/gitlab.md)]
+---
+
+## Monitoring progress and troubleshooting
+
+- Click on "CI/CD" in the left bar to view pipelines
+
+- If you see a permission issue mentioning `system:serviceaccount:gitlab:...`:
+
+  *make sure you did set `KUBECONFIG` correctly!*
+
+- GitLab will create namespaces named `gl-<user>-<project>`
+
+- At the end of the deployment, the web UI will be available on some unique URL
+
+  (`http://<user>-<project>-<githash>-gitlab.<domain>`)
+
+.debug[[k8s/gitlab.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/gitlab.md)]
+---
+
+## Production
+
+- `git tag -f production && git push -f --tags`
+
+- Our CI/CD pipeline will deploy on the production URL
+
+  (`http://<user>-<project>-gitlab.<domain>`)
+
+- It will do it *only* if that same git commit was pushed to staging first
+
+  (look in the pipeline configuration file to see how it's done!)
+
+.debug[[k8s/gitlab.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/gitlab.md)]
+---
+
+## Let's talk about build
+
+- There are many ways to build container images on Kubernetes
+
+- ~~And they all suck~~ Many of them have inconveniencing issues
+
+- Let's do a quick review!
+
+.debug[[k8s/gitlab.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/gitlab.md)]
+---
+
+## Docker-based approaches
+
+- Bind-mount the Docker socket
+
+  - very easy, but requires Docker Engine
+  - build resource usage "evades" Kubernetes scheduler
+  - insecure
+
+- Docker-in-Docker in a pod
+
+  - requires privileged pod
+  - insecure
+  - approaches like rootless or sysbox might help in the future
+
+- External build host
+
+  - more secure
+  - requires resources outside of the Kubernetes cluster
+
+.debug[[k8s/gitlab.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/gitlab.md)]
+---
+
+## Non-privileged builders
+
+- Kaniko
+
+  - each build runs in its own containers or pod
+  - no caching by default
+  - registry-based caching is possible
+
+- BuildKit / `docker buildx`
+
+  - can leverage Docker Engine or long-running Kubernetes worker pod
+  - supports distributed, multi-arch build farms
+  - basic caching out of the box
+  - can also leverage registry-based caching
+
+.debug[[k8s/gitlab.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/gitlab.md)]
+---
+
+## Other approaches
+
+- Ditch the Dockerfile!
+
+- bazel
+
+- jib
+
+- ko
+
+- etc.
+
+.debug[[k8s/gitlab.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/gitlab.md)]
+---
+
+## Discussion
+
+- Our CI/CD workflow is just *one* of the many possibilities
+
+- It would be nice to add some actual unit or e2e tests
+
+- Map the production namespace to a "real" domain name
+
+- Automatically remove older staging environments
+
+  (see e.g. [kube-janitor](https://codeberg.org/hjacobs/kube-janitor))
+
+- Deploy production to a separate cluster
+
+- Better segregate permissions
+
+  (don't give `cluster-admin` to the GitLab pipeline)
+
+.debug[[k8s/gitlab.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/gitlab.md)]
+---
+
+## Pros
+
+- GitLab is an amazing, open source, all-in-one platform
+
+- Available as hosted, community, or enterprise editions
+
+- Rich ecosystem, very customizable
+
+- Can run on Kubernetes, or somewhere else
+
+.debug[[k8s/gitlab.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/gitlab.md)]
+---
+
+## Cons
+
+- It can be difficult to use components separately
+
+  (e.g. use a different registry, or a different job runner)
+
+- More than one way to configure it
+
+  (it's not an opinionated platform)
+
+- Not "Kubernetes-native"
+
+  (for instance, jobs are not Kubernetes jobs)
+
+- Job latency could be improved
+
+*Note: most of these drawbacks are the flip side of the "pros" on the previous slide!*
+
+???
+
+:EN:- CI/CD with GitLab
+:FR:- CI/CD avec GitLab
+
+.debug[[k8s/gitlab.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/gitlab.md)]
+---
+
+class: pic
+
+.interstitial[![Image separating from the next part](https://gallant-turing-d0d520.netlify.com/containers/train-of-containers-1.jpg)]
+
+---
+
+name: toc-extra-content
+class: title
+
+ (Extra content)
+
+.nav[
+[Previous part](#toc-cicd-with-gitlab)
+|
+[Back to table of contents](#toc-part-5)
+|
+[Next part](#toc-collecting-metrics-with-prometheus)
+]
+
+.debug[(automatically generated title slide)]
+
+---
+# (Extra content)
+
+.debug[[3.yml](https://github.com/denisgaudare/container.training.git/tree/main/slides/3.yml)]
+---
+
+class: pic
+
+.interstitial[![Image separating from the next part](https://gallant-turing-d0d520.netlify.com/containers/train-of-containers-2.jpg)]
+
+---
+
+name: toc-collecting-metrics-with-prometheus
+class: title
+
+ Collecting metrics with Prometheus
+
+.nav[
+[Previous part](#toc-extra-content)
+|
+[Back to table of contents](#toc-part-5)
+|
+[Next part](#toc-prometheus-and-grafana)
+]
+
+.debug[(automatically generated title slide)]
+
+---
+# Collecting metrics with Prometheus
+
+- Prometheus is an open-source monitoring system including:
+
+  - multiple *service discovery* backends to figure out which metrics to collect
+
+  - a *scraper* to collect these metrics
+
+  - an efficient *time series database* to store these metrics
+
+  - a specific query language (PromQL) to query these time series
+
+  - an *alert manager* to notify us according to metrics values or trends
+
+- We are going to use it to collect and query some metrics on our Kubernetes cluster
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+## Why Prometheus?
+
+- We don't endorse Prometheus more or less than any other system
+
+- It's relatively well integrated within the cloud-native ecosystem
+
+- It can be self-hosted (this is useful for tutorials like this)
+
+- It can be used for deployments of varying complexity:
+
+  - one binary and 10 lines of configuration to get started
+
+  - all the way to thousands of nodes and millions of metrics
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+## Exposing metrics to Prometheus
+
+- Prometheus obtains metrics and their values by querying *exporters*
+
+- An exporter serves metrics over HTTP, in plain text
+
+- This is what the *node exporter* looks like:
+
+  http://demo.robustperception.io:9100/metrics
+
+- Prometheus itself exposes its own internal metrics, too:
+
+  http://demo.robustperception.io:9090/metrics
+
+- If you want to expose custom metrics to Prometheus:
+
+  - serve a text page like these, and you're good to go
+
+  - libraries are available in various languages to help with quantiles etc.
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+## How Prometheus gets these metrics
+
+- The *Prometheus server* will *scrape* URLs like these at regular intervals
+
+  (by default: every minute; can be more/less frequent)
+
+- The list of URLs to scrape (the *scrape targets*) is defined in configuration
+
+.footnote[Worried about the overhead of parsing a text format?
+<br/>
+Check this [comparison](https://github.com/RichiH/OpenMetrics/blob/master/markdown/protobuf_vs_text.md) of the text format with the (now deprecated) protobuf format!]
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+## Defining scrape targets
+
+This is maybe the simplest configuration file for Prometheus:
+```yaml
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+```
+
+- In this configuration, Prometheus collects its own internal metrics
+
+- A typical configuration file will have multiple `scrape_configs`
+
+- In this configuration, the list of targets is fixed
+
+- A typical configuration file will use dynamic service discovery
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+## Service discovery
+
+This configuration file will leverage existing DNS `A` records:
+```yaml
+scrape_configs:
+  - ...
+  - job_name: 'node'
+    dns_sd_configs:
+      - names: ['api-backends.dc-paris-2.enix.io']
+        type: 'A'
+        port: 9100
+```
+
+- In this configuration, Prometheus resolves the provided name(s)
+
+  (here, `api-backends.dc-paris-2.enix.io`)
+
+- Each resulting IP address is added as a target on port 9100
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+## Dynamic service discovery
+
+- In the DNS example, the names are re-resolved at regular intervals
+
+- As DNS records are created/updated/removed, scrape targets change as well
+
+- Existing data (previously collected metrics) is not deleted
+
+- Other service discovery backends work in a similar fashion
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+## Other service discovery mechanisms
+
+- Prometheus can connect to e.g. a cloud API to list instances
+
+- Or to the Kubernetes API to list nodes, pods, services ...
+
+- Or a service like Consul, Zookeeper, etcd, to list applications
+
+- The resulting configurations files are *way more complex*
+
+  (but don't worry, we won't need to write them ourselves)
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+## Time series database
+
+- We could wonder, "why do we need a specialized database?"
+
+- One metrics data point = metrics ID + timestamp + value
+
+- With a classic SQL or noSQL data store, that's at least 160 bits of data + indexes
+
+- Prometheus is way more efficient, without sacrificing performance
+
+  (it will even be gentler on the I/O subsystem since it needs to write less)
+
+- Would you like to know more? Check this video:
+
+  [Storage in Prometheus 2.0](https://www.youtube.com/watch?v=C4YV-9CrawA) by [Goutham V](https://twitter.com/putadent) at DC17EU
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+## Checking if Prometheus is installed
+
+- Before trying to install Prometheus, let's check if it's already there
+
+.lab[
+
+- Look for services with a label `app=prometheus` across all namespaces:
+  ```bash
+  kubectl get services --selector=app=prometheus --all-namespaces
+  ```
+
+]
+
+If we see a `NodePort` service called `prometheus-server`, we're good!
+
+(We can then skip to "Connecting to the Prometheus web UI".)
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+## Running Prometheus on our cluster
+
+We need to:
+
+- Run the Prometheus server in a pod
+
+  (using e.g. a Deployment to ensure that it keeps running)
+
+- Expose the Prometheus server web UI (e.g. with a NodePort)
+
+- Run the *node exporter* on each node (with a Daemon Set)
+
+- Set up a Service Account so that Prometheus can query the Kubernetes API
+
+- Configure the Prometheus server
+
+  (storing the configuration in a Config Map for easy updates)
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+## Helm charts to the rescue
+
+- To make our lives easier, we are going to use a Helm chart
+
+- The Helm chart will take care of all the steps explained above
+
+  (including some extra features that we don't need, but won't hurt)
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+## Step 1: install Helm
+
+- If we already installed Helm earlier, this command won't break anything
+
+.lab[
+
+- Install the Helm CLI:
+  ```bash
+  curl https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get-helm-3 \
+  | bash
+  ```
+
+]
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+## Step 2: install Prometheus
+
+- The following command, just like the previous ones, is idempotent
+
+  (it won't error out if Prometheus is already installed)
+
+.lab[
+
+- Install Prometheus on our cluster:
+  ```bash
+    helm upgrade prometheus --install prometheus \
+        --repo https://prometheus-community.github.io/helm-charts \
+        --namespace prometheus --create-namespace \
+        --set server.service.type=NodePort \
+        --set server.service.nodePort=30090 \
+        --set server.persistentVolume.enabled=false \
+        --set alertmanager.enabled=false
+  ```
+
+]
+
+Curious about all these flags? They're explained in the next slide.
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+class: extra-details
+
+## Explaining all the Helm flags
+
+- `helm upgrade prometheus` → upgrade the release named `prometheus`
+  <br/>
+  (a "release" is an instance of an app deployed with Helm)
+
+- `--install` → if it doesn't exist, install it (instead of upgrading)
+
+- `prometheus` → use the chart named `prometheus`
+
+- `--repo ...` → the chart is located on the following repository
+
+- `--namespace prometheus` → put it in that specific namespace
+
+- `--create-namespace` → create the namespace if it doesn't exist
+
+- `--set ...` → here are some *values* to be used when rendering the chart's templates
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+class: extra-details
+
+## Values for the Prometheus chart
+
+Helm *values* are parameters to customize our installation.
+
+- `server.service.type=NodePort` → expose the Prometheus server with a NodePort
+
+- `server.service.nodePort=30090` → set the specific NodePort number to use
+
+- `server.persistentVolume.enabled=false` → do not use a PersistentVolumeClaim
+
+- `alertmanager.enabled=false` → disable the alert manager entirely
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+## Connecting to the Prometheus web UI
+
+- Let's connect to the web UI and see what we can do
+
+.lab[
+
+- Figure out the NodePort that was allocated to the Prometheus server:
+  ```bash
+  kubectl get svc --all-namespaces | grep prometheus-server
+  ```
+
+- With your browser, connect to that port
+
+
+- It should be 30090 if we just installed Prometheus with the Helm chart!
+
+]
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+## Querying some metrics
+
+- This is easy... if you are familiar with PromQL
+
+.lab[
+
+- Click on "Graph", and in "expression", paste the following:
+  ```
+    sum by (instance) (
+      irate(
+        container_cpu_usage_seconds_total{
+          pod=~"worker.*"
+          }[5m]
+      )
+    )
+  ```
+
+]
+
+- Click on the blue "Execute" button and on the "Graph" tab just below
+
+- We see the cumulated CPU usage of worker pods for each node
+  <br/>
+  (if we just deployed Prometheus, there won't be much data to see, though)
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+## Getting started with PromQL
+
+- We can't learn PromQL in just 5 minutes
+
+- But we can cover the basics to get an idea of what is possible
+
+  (and have some keywords and pointers)
+
+- We are going to break down the query above
+
+  (building it one step at a time)
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+## Graphing one metric across all tags
+
+This query will show us CPU usage across all containers:
+```
+container_cpu_usage_seconds_total
+```
+
+- The suffix of the metrics name tells us:
+
+  - the unit (seconds of CPU)
+
+  - that it's the total used since the container creation
+
+- Since it's a "total," it is an increasing quantity
+
+  (we need to compute the derivative if we want e.g. CPU % over time)
+
+- We see that the metrics retrieved have *tags* attached to them
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+## Selecting metrics with tags
+
+This query will show us only metrics for worker containers:
+```
+container_cpu_usage_seconds_total{pod=~"worker.*"}
+```
+
+- The `=~` operator allows regex matching
+
+- We select all the pods with a name starting with `worker`
+
+  (it would be better to use labels to select pods; more on that later)
+
+- The result is a smaller set of containers
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+## Transforming counters in rates
+
+This query will show us CPU usage % instead of total seconds used:
+```
+100*irate(container_cpu_usage_seconds_total{pod=~"worker.*"}[5m])
+```
+
+- The [`irate`](https://prometheus.io/docs/prometheus/latest/querying/functions/#irate) operator computes the "per-second instant rate of increase"
+
+  - `rate` is similar but allows decreasing counters and negative values
+
+  - with `irate`, if a counter goes back to zero, we don't get a negative spike
+
+- The `[5m]` tells how far to look back if there is a gap in the data
+
+- And we multiply with `100*` to get CPU % usage
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+## Aggregation operators
+
+This query sums the CPU usage per node:
+```
+sum by (instance) (
+  irate(container_cpu_usage_seconds_total{pod=~"worker.*"}[5m])
+)
+```
+
+- `instance` corresponds to the node on which the container is running
+
+- `sum by (instance) (...)` computes the sum for each instance
+
+- Note: all the other tags are collapsed
+
+  (in other words, the resulting graph only shows the `instance` tag)
+
+- PromQL supports many more [aggregation operators](https://prometheus.io/docs/prometheus/latest/querying/operators/#aggregation-operators)
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+## What kind of metrics can we collect?
+
+- Node metrics (related to physical or virtual machines)
+
+- Container metrics (resource usage per container)
+
+- Databases, message queues, load balancers, ...
+
+  (check out this [list of exporters](https://prometheus.io/docs/instrumenting/exporters/)!)
+
+- Instrumentation (=deluxe `printf` for our code)
+
+- Business metrics (customers served, revenue, ...)
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+class: extra-details
+
+## Node metrics
+
+- CPU, RAM, disk usage on the whole node
+
+- Total number of processes running, and their states
+
+- Number of open files, sockets, and their states
+
+- I/O activity (disk, network), per operation or volume
+
+- Physical/hardware (when applicable): temperature, fan speed...
+
+- ...and much more!
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+class: extra-details
+
+## Container metrics
+
+- Similar to node metrics, but not totally identical
+
+- RAM breakdown will be different
+
+  - active vs inactive memory
+  - some memory is *shared* between containers, and specially accounted for
+
+- I/O activity is also harder to track
+
+  - async writes can cause deferred "charges"
+  - some page-ins are also shared between containers
+
+For details about container metrics, see:
+<br/>
+http://jpetazzo.github.io/2013/10/08/docker-containers-metrics/
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+class: extra-details
+
+## Application metrics
+
+- Arbitrary metrics related to your application and business
+
+- System performance: request latency, error rate...
+
+- Volume information: number of rows in database, message queue size...
+
+- Business data: inventory, items sold, revenue...
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+class: extra-details
+
+## Detecting scrape targets
+
+- Prometheus can leverage Kubernetes service discovery
+
+  (with proper configuration)
+
+- Services or pods can be annotated with:
+
+  - `prometheus.io/scrape: true` to enable scraping
+  - `prometheus.io/port: 9090` to indicate the port number
+  - `prometheus.io/path: /metrics` to indicate the URI (`/metrics` by default)
+
+- Prometheus will detect and scrape these (without needing a restart or reload)
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+## Querying labels
+
+- What if we want to get metrics for containers belonging to a pod tagged `worker`?
+
+- The cAdvisor exporter does not give us Kubernetes labels
+
+- Kubernetes labels are exposed through another exporter
+
+- We can see Kubernetes labels through metrics `kube_pod_labels`
+
+  (each container appears as a time series with constant value of `1`)
+
+- Prometheus *kind of* supports "joins" between time series
+
+- But only if the names of the tags match exactly
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+class: extra-details
+
+## What if the tags don't match?
+
+- Older versions of cAdvisor exporter used tag `pod_name` for the name of a pod
+
+- The Kubernetes service endpoints exporter uses tag `pod` instead
+
+- See [this blog post](https://www.robustperception.io/exposing-the-software-version-to-prometheus) or [this other one](https://www.weave.works/blog/aggregating-pod-resource-cpu-memory-usage-arbitrary-labels-prometheus/) to see how to perform "joins"
+
+- Note that Prometheus cannot "join" time series with different labels
+
+  (see [Prometheus issue #2204](https://github.com/prometheus/prometheus/issues/2204) for the rationale)
+
+- There is a workaround involving relabeling, but it's "not cheap"
+
+  - see [this comment](https://github.com/prometheus/prometheus/issues/2204#issuecomment-261515520) for an overview
+
+  - or [this blog post](https://5pi.de/2017/11/09/use-prometheus-vector-matching-to-get-kubernetes-utilization-across-any-pod-label/) for a complete description of the process
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+## In practice
+
+- Grafana is a beautiful (and useful) frontend to display all kinds of graphs
+
+- Not everyone needs to know Prometheus, PromQL, Grafana, etc.
+
+- But in a team, it is valuable to have at least one person who know them
+
+- That person can set up queries and dashboards for the rest of the team
+
+- It's a little bit like knowing how to optimize SQL queries, Dockerfiles...
+
+  Don't panic if you don't know these tools!
+
+  ...But make sure at least one person in your team is on it 💯
+
+???
+
+:EN:- Collecting metrics with Prometheus
+:FR:- Collecter des métriques avec Prometheus
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+class: pic
+
+.interstitial[![Image separating from the next part](https://gallant-turing-d0d520.netlify.com/containers/two-containers-on-a-truck.jpg)]
+
+---
+
+name: toc-prometheus-and-grafana
+class: title
+
+ Prometheus and Grafana
+
+.nav[
+[Previous part](#toc-collecting-metrics-with-prometheus)
+|
+[Back to table of contents](#toc-part-5)
+|
+[Next part](#toc-)
+]
+
+.debug[(automatically generated title slide)]
+
+---
+# Prometheus and Grafana
+
+- What if we want metrics retention, view graphs, trends?
+
+- A very popular combo is Prometheus+Grafana:
+
+  - Prometheus as the "metrics engine"
+
+  - Grafana to display comprehensive dashboards
+
+- Prometheus also has an alert-manager component to trigger alerts
+
+  (we won't talk about that one)
+
+.debug[[k8s/prometheus-stack.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus-stack.md)]
+---
+
+## Installing Prometheus and Grafana
+
+- A complete metrics stack needs at least:
+
+  - the Prometheus server (collects metrics and stores them efficiently)
+
+  - a collection of *exporters* (exposing metrics to Prometheus)
+
+  - Grafana
+
+  - a collection of Grafana dashboards (building them from scratch is tedious)
+
+- The Helm chart `kube-prometheus-stack` combines all these elements
+
+- ... So we're going to use it to deploy our metrics stack!
+
+.debug[[k8s/prometheus-stack.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus-stack.md)]
+---
+
+## Installing `kube-prometheus-stack`
+
+- Let's install that stack *directly* from its repo
+
+  (without doing `helm repo add` first)
+
+- Otherwise, keep the same naming strategy:
+  ```bash
+    helm upgrade --install kube-prometheus-stack kube-prometheus-stack \
+      --namespace kube-prometheus-stack --create-namespace \
+      --repo https://prometheus-community.github.io/helm-charts 
+  ```
+
+- This will take a minute...
+
+- Then check what was installed:
+  ```bash
+  kubectl get all --namespace kube-prometheus-stack
+  ```
+
+.debug[[k8s/prometheus-stack.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus-stack.md)]
+---
+
+## Exposing Grafana
+
+- Let's create an Ingress for Grafana
+  ```bash
+    kubectl create ingress --namespace kube-prometheus-stack grafana \
+      --rule=grafana.`cloudnative.party`/*=kube-prometheus-stack-grafana:80
+  ```
+
+  (as usual, make sure to use *your* domain name above)
+
+- Connect to Grafana
+
+  (remember that the DNS record might take a few minutes to come up)
+
+.debug[[k8s/prometheus-stack.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus-stack.md)]
+---
+
+## Grafana credentials
+
+- What could the login and password be?
+
+- Let's look at the Secrets available in the namespace:
+  ```bash
+  kubectl get secrets --namespace kube-prometheus-stack
+  ```
+
+- There is a `kube-prometheus-stack-grafana` that looks promising!
+
+- Decode the Secret:
+  ```bash
+    kubectl get secret --namespace kube-prometheus-stack \
+      kube-prometheus-stack-grafana -o json | jq '.data | map_values(@base64d)'
+  ```
+
+- If you don't have the `jq` tool mentioned above, don't worry...
+
+--
+
+- The login/password is hardcoded to `admin`/`prom-operator` 😬
+
+.debug[[k8s/prometheus-stack.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus-stack.md)]
+---
+
+## Grafana dashboards
+
+- Once logged in, click on the "Dashboards" icon on the left
+
+  (it's the one that looks like four squares)
+
+- Then click on the "Manage" entry
+
+- Then click on "Kubernetes / Compute Resources / Cluster"
+
+- This gives us a breakdown of resource usage by Namespace
+
+- Feel free to explore the other dashboards!
+
+???
+
+:EN:- Installing Prometheus and Grafana
+:FR:- Installer Prometheus et Grafana
+
+:T: Observing our cluster with Prometheus and Grafana
+
+:Q: What's the relationship between Prometheus and Grafana?
+:A: Prometheus collects and graphs metrics; Grafana sends alerts
+:A: ✔️Prometheus collects metrics; Grafana displays them on dashboards
+:A: Prometheus collects and graphs metrics; Grafana is its configuration interface
+:A: Grafana collects and graphs metrics; Prometheus sends alerts
+
+.debug[[k8s/prometheus-stack.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus-stack.md)]</textarea>
+    <script src="remark.min.js" type="text/javascript">
+    </script>
+    <script type="text/javascript">
+      var slideshow = remark.create({
+        ratio: '16:9',
+        highlightSpans: true,
+        slideNumberFormat: '%current%/%total%',
+        excludedClasses: ["self-paced"]
+      });
+    </script>
+    
+    <!-- 
+    These two scripts will be available only when loading the
+    content using the pub/sub server. Otherwise, they'll just
+    404 and that's OK.
+    -->
+    <script src="/socket.io/socket.io.js">
+    </script>
+    <script src="/remote.js">
+    </script>
+
+  </body>
+</html>
