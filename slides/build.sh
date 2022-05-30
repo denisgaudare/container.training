@@ -14,10 +14,10 @@ once)
       python ./appendcheck.py $YAML.html
     done
   fi
-  rm -f /tmp/slides.tgz
-  tar --exclude-from=./tarignore.txt -cvzf /tmp/slides.tgz .
-  mv /tmp/slides.tgz .
-  echo "Created slides.tgz archive."
+  rm -f /tmp/slides.zip
+  zip -qr /tmp/slides.zip . -x@zipexclude.lst
+  mv /tmp/slides.zip .
+  echo "Created slides.zip archive."
   ;;
 
 forever)

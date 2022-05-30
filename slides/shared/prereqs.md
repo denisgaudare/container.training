@@ -63,8 +63,9 @@ class: in-person
 ---
 
 class: in-person, pic
+## Everyone wins !!!
 
-![Everyone wins](images/fdj_logo.jpeg)
+![Everyone wins](images/logo-entreprise.jpg)
 
 ---
 

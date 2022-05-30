@@ -2,7 +2,11 @@
 *.tgz
 *.zip
 *.yaml
+*.yml
 *.py
 *.md
+*.orig*
+*.sh
+zipexclude.lst
 requirements.txt
 

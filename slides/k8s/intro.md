@@ -1,11 +1,10 @@
 ## A brief introduction
 
-- This was initially written by [Denis Gaudaré](mailto:denisgaudare@gmail.com) to support in-person,
-  instructor-led workshops and tutorials
+- We are a collectif of professionals and instructors interested in leading workshops and tutorials
   
-- Credit is also due to sources in books, data on the Internet, and fellow specialists
+- Credit is to be shared among various fellow specialists, info found in books, articles on the Internet, and thanks to (long) hours of work.
 
-- You will be able to follow along on your own, at your own pace
+- The slides are also to be used along, on your own, at your own pace
 
 - Are included in these slides, as much information as possible
 
@@ -14,6 +13,8 @@
 - ... Or be comfortable spending some time reading the Kubernetes [documentation](https://kubernetes.io/docs/) ...
 
 - ... And looking for answers on [StackOverflow](http://stackoverflow.com/questions/tagged/kubernetes) and other outlets
+
+- ... and myself [Denis Gaudaré](mailto:denisgaudare@gmail.com)
 
 ---
 

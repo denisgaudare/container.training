@@ -1,21 +1,20 @@
 ## A brief introduction
 
-- Especially written in 2022 to support an FDJ training, instructor-led workshop
+- We are a collectif of professionals and instructors interested in leading workshops and tutorials
+  
+- Credit is to be shared among various fellow specialists, info found in books, articles on the Internet, and thanks to (long) hours of work.
 
-- These materials are maintained by [Denis Gaudaré](https://twitter.com/denisgaudare) 
+- The slides are also to be used along, on your own, at your own pace
 
-- You will also be able to follow along on your own, at your own pace
+- Are included in these slides, as much information as possible
 
-- Are included as much information as possible in these slides
+- It is recommend having a mentor to help you ...
 
-- It is recommended (later on) having a mentor to help you ...
+- ... Or be comfortable spending some time reading the Kubernetes [documentation](https://kubernetes.io/docs/) ...
 
-- ... Or be comfortable spending some time reading the Docker
- [documentation](https://docs.docker.com/) ...
+- ... And looking for answers on [StackOverflow](http://stackoverflow.com/questions/tagged/kubernetes) and other outlets
 
-- ... And looking for answers in the [Docker forums](https://forums.docker.com),
-  [StackOverflow](http://stackoverflow.com/questions/tagged/docker),
-  and other outlets
+- ... and myself [Denis Gaudaré](mailto:denisgaudare@gmail.com)
 
 ---
 
@@ -30,10 +29,10 @@ class: self-paced
 
 - These slides include *tons* of demos, exercises, and examples
 
-- They assume that you have access to a machine running Docker
+- They assume that you have access to a Kubernetes cluster
 
 - If you are attending a workshop or tutorial:
-  <br/>you will be given specific instructions to access a cloud VM
+  <br/>you will be given specific instructions to access your cluster
 
 - If you are doing this on your own:
-  <br/>we will tell you how to install Docker or access a Docker environment
+  <br/>the first chapter will give you various options to get your own cluster

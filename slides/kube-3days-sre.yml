@@ -5,9 +5,9 @@ title: |
 #chat: "[Gitter](https://gitter.im/jpetazzo/workshop-yyyymmdd-city)"
 chat: "In person!"
 
-gitrepo: github.com/denisgaudare/container.training
+gitrepo: github.com/denisgaudare/
 
-slides: https://localhost/
+slides: http://localhost/
 
 #slidenumberprefix: "#SomeHashTag &mdash; "
 
@@ -31,8 +31,8 @@ content:
   #- shared/connecting.md
   - k8s/versions-k8s.md
 
-  #- shared/composescale.md
-  #- shared/hastyconclusions.md
+  - shared/composescale.md
+  - shared/hastyconclusions.md
   - k8s/concepts-k8s.md
   - k8s/kubectlget.md
   # 1st pingpong
@@ -54,7 +54,7 @@ content:
   #- k8s/buildshiprun-selfhosted.md
   #- k8s/buildshiprun-dockerhub.md
   - k8s/ourapponkube.md
-  #- k8s/exercise-wordsmith.md
+  - k8s/exercise-wordsmith.md
 -
   #- k8s/kubenet.md
   - k8s/yamldeploy.md
@@ -70,12 +70,12 @@ content:
   - shared/hastyconclusions.md
   - k8s/daemonset.md
   - k8s/authoring-yaml.md
-  #- k8s/exercise-yaml.md
+  - k8s/exercise-yaml.md
 -
   - k8s/localkubeconfig.md
   #- k8s/access-eks-cluster.md
-  #- k8s/accessinternal.md
-  #- k8s/kubectlproxy.md
+  - k8s/accessinternal.md
+  - k8s/kubectlproxy.md
   - k8s/rollout.md
   - k8s/healthchecks.md
   - k8s/healthchecks-more.md

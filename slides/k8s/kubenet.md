@@ -65,7 +65,7 @@
 
 ## Kubernetes network model: in practice
 
-- The nodes that we are using have been set up to use [Weave](https://github.com/weaveworks/weave)
+- The nodes that we are using have been set up to use [Weave](https://github.com/weaveworks/weave) or any other CNI
 
 - We don't endorse Weave in a particular way, it just Works For Us
 
