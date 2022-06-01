@@ -29,10 +29,14 @@ Fondamentaux Kubernetes<br/>
 
 .debug[
 ```
+ M .gitignore
+ M slides/1.yml.html
+ M slides/2.yml
+ M slides/2.yml.html
 
 ```
 
-These slides have been built from commit: 7b841db
+These slides have been built from commit: 3b9c256
 
 
 [shared/title.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/shared/title.md)]
@@ -635,7 +639,13 @@ name: toc-part-9
 
 - [Executing batch jobs](#toc-executing-batch-jobs)
 
-- [Links and resources](#toc-links-and-resources)
+- [Centralized logging](#toc-centralized-logging)
+
+- [Collecting metrics with Prometheus](#toc-collecting-metrics-with-prometheus)
+
+- [Stateful sets](#toc-stateful-sets)
+
+- [Local Persistent Volumes](#toc-local-persistent-volumes)
 
 
 .debug[(auto-generated TOC)]
@@ -13438,7 +13448,7 @@ class: title
 |
 [Back to table of contents](#toc-part-9)
 |
-[Next part](#toc-links-and-resources)
+[Next part](#toc-centralized-logging)
 ]
 
 .debug[(automatically generated title slide)]
@@ -13628,6 +13638,1352 @@ class: extra-details
 
 .debug[[k8s/batch-jobs.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/batch-jobs.md)]
 ---
+
+class: pic
+
+.interstitial[![Image separating from the next part](https://gallant-turing-d0d520.netlify.com/containers/containers-by-the-water.jpg)]
+
+---
+
+name: toc-centralized-logging
+class: title
+
+ Centralized logging
+
+.nav[
+[Previous part](#toc-executing-batch-jobs)
+|
+[Back to table of contents](#toc-part-9)
+|
+[Next part](#toc-collecting-metrics-with-prometheus)
+]
+
+.debug[(automatically generated title slide)]
+
+---
+# Centralized logging
+
+- Using `kubectl` or `stern` is simple; but it has drawbacks:
+
+  - when a node goes down, its logs are not available anymore
+
+  - we can only dump or stream logs; we want to search/index/count...
+
+- We want to send all our logs to a single place
+
+- We want to parse them (e.g. for HTTP logs) and index them
+
+- We want a nice web dashboard
+
+--
+
+- We are going to deploy an EFK stack
+
+.debug[[k8s/logs-centralized.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/logs-centralized.md)]
+---
+
+## What is EFK?
+
+- EFK is three components:
+
+  - ElasticSearch (to store and index log entries)
+
+  - Fluentd (to get container logs, process them, and put them in ElasticSearch)
+
+  - Kibana (to view/search log entries with a nice UI)
+
+- The only component that we need to access from outside the cluster will be Kibana
+
+.debug[[k8s/logs-centralized.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/logs-centralized.md)]
+---
+
+## Deploying EFK on our cluster
+
+- We are going to use a YAML file describing all the required resources
+
+.lab[
+
+- Load the YAML file into our cluster:
+  ```bash
+  kubectl apply -f ~/container.training/k8s/efk.yaml
+  ```
+
+]
+
+If we [look at the YAML file](https://github.com/denisgaudare/container.training/blob/master/k8s/efk.yaml), we see that
+it creates a daemon set, two deployments, two services,
+and a few roles and role bindings (to give fluentd the required permissions).
+
+.debug[[k8s/logs-centralized.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/logs-centralized.md)]
+---
+
+## The itinerary of a log line (before Fluentd)
+
+- A container writes a line on stdout or stderr
+
+- Both are typically piped to the container engine (Docker or otherwise)
+
+- The container engine reads the line, and sends it to a logging driver
+
+- The timestamp and stream (stdout or stderr) is added to the log line
+
+- With the default configuration for Kubernetes, the line is written to a JSON file
+
+  (`/var/log/containers/pod-name_namespace_container-id.log`)
+
+- That file is read when we invoke `kubectl logs`; we can access it directly too
+
+.debug[[k8s/logs-centralized.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/logs-centralized.md)]
+---
+
+## The itinerary of a log line (with Fluentd)
+
+- Fluentd runs on each node (thanks to a daemon set)
+
+- It bind-mounts `/var/log/containers` from the host (to access these files)
+
+- It continuously scans this directory for new files; reads them; parses them
+
+- Each log line becomes a JSON object, fully annotated with extra information:
+  <br/>container id, pod name, Kubernetes labels...
+
+- These JSON objects are stored in ElasticSearch
+
+- ElasticSearch indexes the JSON objects
+
+- We can access the logs through Kibana (and perform searches, counts, etc.)
+
+.debug[[k8s/logs-centralized.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/logs-centralized.md)]
+---
+
+## Accessing Kibana
+
+- Kibana offers a web interface that is relatively straightforward
+
+- Let's check it out!
+
+.lab[
+
+- Check which `NodePort` was allocated to Kibana:
+  ```bash
+  kubectl get svc kibana
+  ```
+
+- With our web browser, connect to Kibana
+
+]
+
+.debug[[k8s/logs-centralized.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/logs-centralized.md)]
+---
+
+## Using Kibana
+
+*Note: this is not a Kibana workshop! So this section is deliberately very terse.*
+
+- The first time you connect to Kibana, you must "configure an index pattern"
+
+- Just use the one that is suggested, `@timestamp`.red[*]
+
+- Then click "Discover" (in the top-left corner)
+
+- You should see container logs
+
+- Advice: in the left column, select a few fields to display, e.g.:
+
+  `kubernetes.host`, `kubernetes.pod_name`, `stream`, `log`
+
+.red[*]If you don't see `@timestamp`, it's probably because no logs exist yet.
+<br/>Wait a bit, and double-check the logging pipeline!
+
+.debug[[k8s/logs-centralized.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/logs-centralized.md)]
+---
+
+## Caveat emptor
+
+We are using EFK because it is relatively straightforward
+to deploy on Kubernetes, without having to redeploy or reconfigure
+our cluster. But it doesn't mean that it will always be the best
+option for your use-case. If you are running Kubernetes in the
+cloud, you might consider using the cloud provider's logging
+infrastructure (if it can be integrated with Kubernetes).
+
+The deployment method that we will use here has been simplified:
+there is only one ElasticSearch node. In a real deployment, you
+might use a cluster, both for performance and reliability reasons.
+But this is outside of the scope of this chapter.
+
+The YAML file that we used creates all the resources in the
+`default` namespace, for simplicity. In a real scenario, you will
+create the resources in the `kube-system` namespace or in a dedicated namespace.
+
+???
+
+:EN:- Centralizing logs
+:FR:- Centraliser les logs
+
+.debug[[k8s/logs-centralized.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/logs-centralized.md)]
+---
+
+class: pic
+
+.interstitial[![Image separating from the next part](https://gallant-turing-d0d520.netlify.com/containers/distillery-containers.jpg)]
+
+---
+
+name: toc-collecting-metrics-with-prometheus
+class: title
+
+ Collecting metrics with Prometheus
+
+.nav[
+[Previous part](#toc-centralized-logging)
+|
+[Back to table of contents](#toc-part-9)
+|
+[Next part](#toc-stateful-sets)
+]
+
+.debug[(automatically generated title slide)]
+
+---
+# Collecting metrics with Prometheus
+
+- Prometheus is an open-source monitoring system including:
+
+  - multiple *service discovery* backends to figure out which metrics to collect
+
+  - a *scraper* to collect these metrics
+
+  - an efficient *time series database* to store these metrics
+
+  - a specific query language (PromQL) to query these time series
+
+  - an *alert manager* to notify us according to metrics values or trends
+
+- We are going to use it to collect and query some metrics on our Kubernetes cluster
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+## Why Prometheus?
+
+- We don't endorse Prometheus more or less than any other system
+
+- It's relatively well integrated within the cloud-native ecosystem
+
+- It can be self-hosted (this is useful for tutorials like this)
+
+- It can be used for deployments of varying complexity:
+
+  - one binary and 10 lines of configuration to get started
+
+  - all the way to thousands of nodes and millions of metrics
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+## Exposing metrics to Prometheus
+
+- Prometheus obtains metrics and their values by querying *exporters*
+
+- An exporter serves metrics over HTTP, in plain text
+
+- This is what the *node exporter* looks like:
+
+  http://demo.robustperception.io:9100/metrics
+
+- Prometheus itself exposes its own internal metrics, too:
+
+  http://demo.robustperception.io:9090/metrics
+
+- If you want to expose custom metrics to Prometheus:
+
+  - serve a text page like these, and you're good to go
+
+  - libraries are available in various languages to help with quantiles etc.
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+## How Prometheus gets these metrics
+
+- The *Prometheus server* will *scrape* URLs like these at regular intervals
+
+  (by default: every minute; can be more/less frequent)
+
+- The list of URLs to scrape (the *scrape targets*) is defined in configuration
+
+.footnote[Worried about the overhead of parsing a text format?
+<br/>
+Check this [comparison](https://github.com/RichiH/OpenMetrics/blob/master/markdown/protobuf_vs_text.md) of the text format with the (now deprecated) protobuf format!]
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+## Defining scrape targets
+
+This is maybe the simplest configuration file for Prometheus:
+```yaml
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+```
+
+- In this configuration, Prometheus collects its own internal metrics
+
+- A typical configuration file will have multiple `scrape_configs`
+
+- In this configuration, the list of targets is fixed
+
+- A typical configuration file will use dynamic service discovery
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+## Service discovery
+
+This configuration file will leverage existing DNS `A` records:
+```yaml
+scrape_configs:
+  - ...
+  - job_name: 'node'
+    dns_sd_configs:
+      - names: ['api-backends.dc-paris-2.enix.io']
+        type: 'A'
+        port: 9100
+```
+
+- In this configuration, Prometheus resolves the provided name(s)
+
+  (here, `api-backends.dc-paris-2.enix.io`)
+
+- Each resulting IP address is added as a target on port 9100
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+## Dynamic service discovery
+
+- In the DNS example, the names are re-resolved at regular intervals
+
+- As DNS records are created/updated/removed, scrape targets change as well
+
+- Existing data (previously collected metrics) is not deleted
+
+- Other service discovery backends work in a similar fashion
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+## Other service discovery mechanisms
+
+- Prometheus can connect to e.g. a cloud API to list instances
+
+- Or to the Kubernetes API to list nodes, pods, services ...
+
+- Or a service like Consul, Zookeeper, etcd, to list applications
+
+- The resulting configurations files are *way more complex*
+
+  (but don't worry, we won't need to write them ourselves)
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+## Time series database
+
+- We could wonder, "why do we need a specialized database?"
+
+- One metrics data point = metrics ID + timestamp + value
+
+- With a classic SQL or noSQL data store, that's at least 160 bits of data + indexes
+
+- Prometheus is way more efficient, without sacrificing performance
+
+  (it will even be gentler on the I/O subsystem since it needs to write less)
+
+- Would you like to know more? Check this video:
+
+  [Storage in Prometheus 2.0](https://www.youtube.com/watch?v=C4YV-9CrawA) by [Goutham V](https://twitter.com/putadent) at DC17EU
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+## Checking if Prometheus is installed
+
+- Before trying to install Prometheus, let's check if it's already there
+
+.lab[
+
+- Look for services with a label `app=prometheus` across all namespaces:
+  ```bash
+  kubectl get services --selector=app=prometheus --all-namespaces
+  ```
+
+]
+
+If we see a `NodePort` service called `prometheus-server`, we're good!
+
+(We can then skip to "Connecting to the Prometheus web UI".)
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+## Running Prometheus on our cluster
+
+We need to:
+
+- Run the Prometheus server in a pod
+
+  (using e.g. a Deployment to ensure that it keeps running)
+
+- Expose the Prometheus server web UI (e.g. with a NodePort)
+
+- Run the *node exporter* on each node (with a Daemon Set)
+
+- Set up a Service Account so that Prometheus can query the Kubernetes API
+
+- Configure the Prometheus server
+
+  (storing the configuration in a Config Map for easy updates)
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+## Helm charts to the rescue
+
+- To make our lives easier, we are going to use a Helm chart
+
+- The Helm chart will take care of all the steps explained above
+
+  (including some extra features that we don't need, but won't hurt)
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+## Step 1: install Helm
+
+- If we already installed Helm earlier, this command won't break anything
+
+.lab[
+
+- Install the Helm CLI:
+  ```bash
+  curl https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get-helm-3 \
+  | bash
+  ```
+
+]
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+## Step 2: install Prometheus
+
+- The following command, just like the previous ones, is idempotent
+
+  (it won't error out if Prometheus is already installed)
+
+.lab[
+
+- Install Prometheus on our cluster:
+  ```bash
+    helm upgrade prometheus --install prometheus \
+        --repo https://prometheus-community.github.io/helm-charts \
+        --namespace prometheus --create-namespace \
+        --set server.service.type=NodePort \
+        --set server.service.nodePort=30090 \
+        --set server.persistentVolume.enabled=false \
+        --set alertmanager.enabled=false
+  ```
+
+]
+
+Curious about all these flags? They're explained in the next slide.
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+class: extra-details
+
+## Explaining all the Helm flags
+
+- `helm upgrade prometheus` → upgrade the release named `prometheus`
+  <br/>
+  (a "release" is an instance of an app deployed with Helm)
+
+- `--install` → if it doesn't exist, install it (instead of upgrading)
+
+- `prometheus` → use the chart named `prometheus`
+
+- `--repo ...` → the chart is located on the following repository
+
+- `--namespace prometheus` → put it in that specific namespace
+
+- `--create-namespace` → create the namespace if it doesn't exist
+
+- `--set ...` → here are some *values* to be used when rendering the chart's templates
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+class: extra-details
+
+## Values for the Prometheus chart
+
+Helm *values* are parameters to customize our installation.
+
+- `server.service.type=NodePort` → expose the Prometheus server with a NodePort
+
+- `server.service.nodePort=30090` → set the specific NodePort number to use
+
+- `server.persistentVolume.enabled=false` → do not use a PersistentVolumeClaim
+
+- `alertmanager.enabled=false` → disable the alert manager entirely
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+## Connecting to the Prometheus web UI
+
+- Let's connect to the web UI and see what we can do
+
+.lab[
+
+- Figure out the NodePort that was allocated to the Prometheus server:
+  ```bash
+  kubectl get svc --all-namespaces | grep prometheus-server
+  ```
+
+- With your browser, connect to that port
+
+
+- It should be 30090 if we just installed Prometheus with the Helm chart!
+
+]
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+## Querying some metrics
+
+- This is easy... if you are familiar with PromQL
+
+.lab[
+
+- Click on "Graph", and in "expression", paste the following:
+  ```
+    sum by (instance) (
+      irate(
+        container_cpu_usage_seconds_total{
+          pod=~"worker.*"
+          }[5m]
+      )
+    )
+  ```
+
+]
+
+- Click on the blue "Execute" button and on the "Graph" tab just below
+
+- We see the cumulated CPU usage of worker pods for each node
+  <br/>
+  (if we just deployed Prometheus, there won't be much data to see, though)
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+## Getting started with PromQL
+
+- We can't learn PromQL in just 5 minutes
+
+- But we can cover the basics to get an idea of what is possible
+
+  (and have some keywords and pointers)
+
+- We are going to break down the query above
+
+  (building it one step at a time)
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+## Graphing one metric across all tags
+
+This query will show us CPU usage across all containers:
+```
+container_cpu_usage_seconds_total
+```
+
+- The suffix of the metrics name tells us:
+
+  - the unit (seconds of CPU)
+
+  - that it's the total used since the container creation
+
+- Since it's a "total," it is an increasing quantity
+
+  (we need to compute the derivative if we want e.g. CPU % over time)
+
+- We see that the metrics retrieved have *tags* attached to them
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+## Selecting metrics with tags
+
+This query will show us only metrics for worker containers:
+```
+container_cpu_usage_seconds_total{pod=~"worker.*"}
+```
+
+- The `=~` operator allows regex matching
+
+- We select all the pods with a name starting with `worker`
+
+  (it would be better to use labels to select pods; more on that later)
+
+- The result is a smaller set of containers
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+## Transforming counters in rates
+
+This query will show us CPU usage % instead of total seconds used:
+```
+100*irate(container_cpu_usage_seconds_total{pod=~"worker.*"}[5m])
+```
+
+- The [`irate`](https://prometheus.io/docs/prometheus/latest/querying/functions/#irate) operator computes the "per-second instant rate of increase"
+
+  - `rate` is similar but allows decreasing counters and negative values
+
+  - with `irate`, if a counter goes back to zero, we don't get a negative spike
+
+- The `[5m]` tells how far to look back if there is a gap in the data
+
+- And we multiply with `100*` to get CPU % usage
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+## Aggregation operators
+
+This query sums the CPU usage per node:
+```
+sum by (instance) (
+  irate(container_cpu_usage_seconds_total{pod=~"worker.*"}[5m])
+)
+```
+
+- `instance` corresponds to the node on which the container is running
+
+- `sum by (instance) (...)` computes the sum for each instance
+
+- Note: all the other tags are collapsed
+
+  (in other words, the resulting graph only shows the `instance` tag)
+
+- PromQL supports many more [aggregation operators](https://prometheus.io/docs/prometheus/latest/querying/operators/#aggregation-operators)
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+## What kind of metrics can we collect?
+
+- Node metrics (related to physical or virtual machines)
+
+- Container metrics (resource usage per container)
+
+- Databases, message queues, load balancers, ...
+
+  (check out this [list of exporters](https://prometheus.io/docs/instrumenting/exporters/)!)
+
+- Instrumentation (=deluxe `printf` for our code)
+
+- Business metrics (customers served, revenue, ...)
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+class: extra-details
+
+## Node metrics
+
+- CPU, RAM, disk usage on the whole node
+
+- Total number of processes running, and their states
+
+- Number of open files, sockets, and their states
+
+- I/O activity (disk, network), per operation or volume
+
+- Physical/hardware (when applicable): temperature, fan speed...
+
+- ...and much more!
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+class: extra-details
+
+## Container metrics
+
+- Similar to node metrics, but not totally identical
+
+- RAM breakdown will be different
+
+  - active vs inactive memory
+  - some memory is *shared* between containers, and specially accounted for
+
+- I/O activity is also harder to track
+
+  - async writes can cause deferred "charges"
+  - some page-ins are also shared between containers
+
+For details about container metrics, see:
+<br/>
+http://jpetazzo.github.io/2013/10/08/docker-containers-metrics/
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+class: extra-details
+
+## Application metrics
+
+- Arbitrary metrics related to your application and business
+
+- System performance: request latency, error rate...
+
+- Volume information: number of rows in database, message queue size...
+
+- Business data: inventory, items sold, revenue...
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+class: extra-details
+
+## Detecting scrape targets
+
+- Prometheus can leverage Kubernetes service discovery
+
+  (with proper configuration)
+
+- Services or pods can be annotated with:
+
+  - `prometheus.io/scrape: true` to enable scraping
+  - `prometheus.io/port: 9090` to indicate the port number
+  - `prometheus.io/path: /metrics` to indicate the URI (`/metrics` by default)
+
+- Prometheus will detect and scrape these (without needing a restart or reload)
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+## Querying labels
+
+- What if we want to get metrics for containers belonging to a pod tagged `worker`?
+
+- The cAdvisor exporter does not give us Kubernetes labels
+
+- Kubernetes labels are exposed through another exporter
+
+- We can see Kubernetes labels through metrics `kube_pod_labels`
+
+  (each container appears as a time series with constant value of `1`)
+
+- Prometheus *kind of* supports "joins" between time series
+
+- But only if the names of the tags match exactly
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+class: extra-details
+
+## What if the tags don't match?
+
+- Older versions of cAdvisor exporter used tag `pod_name` for the name of a pod
+
+- The Kubernetes service endpoints exporter uses tag `pod` instead
+
+- See [this blog post](https://www.robustperception.io/exposing-the-software-version-to-prometheus) or [this other one](https://www.weave.works/blog/aggregating-pod-resource-cpu-memory-usage-arbitrary-labels-prometheus/) to see how to perform "joins"
+
+- Note that Prometheus cannot "join" time series with different labels
+
+  (see [Prometheus issue #2204](https://github.com/prometheus/prometheus/issues/2204) for the rationale)
+
+- There is a workaround involving relabeling, but it's "not cheap"
+
+  - see [this comment](https://github.com/prometheus/prometheus/issues/2204#issuecomment-261515520) for an overview
+
+  - or [this blog post](https://5pi.de/2017/11/09/use-prometheus-vector-matching-to-get-kubernetes-utilization-across-any-pod-label/) for a complete description of the process
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+## In practice
+
+- Grafana is a beautiful (and useful) frontend to display all kinds of graphs
+
+- Not everyone needs to know Prometheus, PromQL, Grafana, etc.
+
+- But in a team, it is valuable to have at least one person who know them
+
+- That person can set up queries and dashboards for the rest of the team
+
+- It's a little bit like knowing how to optimize SQL queries, Dockerfiles...
+
+  Don't panic if you don't know these tools!
+
+  ...But make sure at least one person in your team is on it 💯
+
+???
+
+:EN:- Collecting metrics with Prometheus
+:FR:- Collecter des métriques avec Prometheus
+
+.debug[[k8s/prometheus.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/prometheus.md)]
+---
+
+class: pic
+
+.interstitial[![Image separating from the next part](https://gallant-turing-d0d520.netlify.com/containers/lots-of-containers.jpg)]
+
+---
+
+name: toc-stateful-sets
+class: title
+
+ Stateful sets
+
+.nav[
+[Previous part](#toc-collecting-metrics-with-prometheus)
+|
+[Back to table of contents](#toc-part-9)
+|
+[Next part](#toc-local-persistent-volumes)
+]
+
+.debug[(automatically generated title slide)]
+
+---
+# Stateful sets
+
+- Stateful sets are a type of resource in the Kubernetes API
+
+  (like pods, deployments, services...)
+
+- They offer mechanisms to deploy scaled stateful applications
+
+- At a first glance, they look like Deployments:
+
+  - a stateful set defines a pod spec and a number of replicas *R*
+
+  - it will make sure that *R* copies of the pod are running
+
+  - that number can be changed while the stateful set is running
+
+  - updating the pod spec will cause a rolling update to happen
+
+- But they also have some significant differences
+
+.debug[[k8s/statefulsets.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/statefulsets.md)]
+---
+
+## Stateful sets unique features
+
+- Pods in a stateful set are numbered (from 0 to *R-1*) and ordered
+
+- They are started and updated in order (from 0 to *R-1*)
+
+- A pod is started (or updated) only when the previous one is ready
+
+- They are stopped in reverse order (from *R-1* to 0)
+
+- Each pod knows its identity (i.e. which number it is in the set)
+
+- Each pod can discover the IP address of the others easily
+
+- The pods can persist data on attached volumes
+
+🤔 Wait a minute ... Can't we already attach volumes to pods and deployments?
+
+.debug[[k8s/statefulsets.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/statefulsets.md)]
+---
+
+## Revisiting volumes
+
+- [Volumes](https://kubernetes.io/docs/concepts/storage/volumes/) are used for many purposes:
+
+  - sharing data between containers in a pod
+
+  - exposing configuration information and secrets to containers
+
+  - accessing storage systems
+
+- Let's see examples of the latter usage
+
+.debug[[k8s/statefulsets.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/statefulsets.md)]
+---
+
+## Volumes types
+
+- There are many [types of volumes](https://kubernetes.io/docs/concepts/storage/volumes/#types-of-volumes) available:
+
+  - public cloud storage (GCEPersistentDisk, AWSElasticBlockStore, AzureDisk...)
+
+  - private cloud storage (Cinder, VsphereVolume...)
+
+  - traditional storage systems (NFS, iSCSI, FC...)
+
+  - distributed storage (Ceph, Glusterfs, Portworx...)
+
+- Using a persistent volume requires:
+
+  - creating the volume out-of-band (outside of the Kubernetes API)
+
+  - referencing the volume in the pod description, with all its parameters
+
+.debug[[k8s/statefulsets.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/statefulsets.md)]
+---
+
+## Using a cloud volume
+
+Here is a pod definition using an AWS EBS volume (that has to be created first):
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-using-my-ebs-volume
+spec:
+  containers:
+  - image: ...
+    name: container-using-my-ebs-volume
+    volumeMounts:
+    - mountPath: /my-ebs
+      name: my-ebs-volume
+  volumes:
+  - name: my-ebs-volume
+    awsElasticBlockStore:
+      volumeID: vol-049df61146c4d7901
+      fsType: ext4
+```
+
+.debug[[k8s/statefulsets.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/statefulsets.md)]
+---
+
+## Using an NFS volume
+
+Here is another example using a volume on an NFS server:
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-using-my-nfs-volume
+spec:
+  containers:
+  - image: ...
+    name: container-using-my-nfs-volume
+    volumeMounts:
+    - mountPath: /my-nfs
+      name: my-nfs-volume
+  volumes:
+  - name: my-nfs-volume
+    nfs:
+      server: 192.168.0.55
+      path: "/exports/assets"
+```
+
+.debug[[k8s/statefulsets.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/statefulsets.md)]
+---
+
+## Shortcomings of volumes
+
+- Their lifecycle (creation, deletion...) is managed outside of the Kubernetes API
+
+  (we can't just use `kubectl apply/create/delete/...` to manage them)
+
+- If a Deployment uses a volume, all replicas end up using the same volume
+
+- That volume must then support concurrent access
+
+  - some volumes do (e.g. NFS servers support multiple read/write access)
+
+  - some volumes support concurrent reads
+
+  - some volumes support concurrent access for colocated pods
+
+- What we really need is a way for each replica to have its own volume
+
+.debug[[k8s/statefulsets.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/statefulsets.md)]
+---
+
+## Individual volumes
+
+- The Pods of a Stateful set can have individual volumes
+
+  (i.e. in a Stateful set with 3 replicas, there will be 3 volumes)
+
+- These volumes can be either:
+
+  - allocated from a pool of pre-existing volumes (disks, partitions ...)
+
+  - created dynamically using a storage system
+
+- This introduces a bunch of new Kubernetes resource types:
+
+  Persistent Volumes, Persistent Volume Claims, Storage Classes
+
+  (and also `volumeClaimTemplates`, that appear within Stateful Set manifests!)
+
+.debug[[k8s/statefulsets.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/statefulsets.md)]
+---
+
+## Stateful set recap
+
+- A Stateful sets manages a number of identical pods
+
+  (like a Deployment)
+
+- These pods are numbered, and started/upgraded/stopped in a specific order
+
+- These pods are aware of their number
+
+  (e.g., #0 can decide to be the primary, and #1 can be secondary)
+
+- These pods can find the IP addresses of the other pods in the set
+
+  (through a *headless service*)
+
+- These pods can each have their own persistent storage
+
+.debug[[k8s/statefulsets.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/statefulsets.md)]
+---
+
+## Obtaining per-pod storage
+
+- Stateful Sets can have *persistent volume claim templates*
+
+  (declared in `spec.volumeClaimTemplates` in the Stateful set manifest)
+
+- A claim template will create one Persistent Volume Claim per pod
+
+  (the PVC will be named `<claim-name>.<stateful-set-name>.<pod-index>`)
+
+- Persistent Volume Claims are matched 1-to-1 with Persistent Volumes
+
+- Persistent Volume provisioning can be done:
+
+  - automatically (by leveraging *dynamic provisioning* with a Storage Class)
+
+  - manually (human operator creates the volumes ahead of time, or when needed)
+
+???
+
+:EN:- Deploying apps with Stateful Sets
+:EN:- Understanding Persistent Volume Claims and Storage Classes
+:FR:- Déployer une application avec un *Stateful Set*
+:FR:- Comprendre les *Persistent Volume Claims* et *Storage Classes*
+
+
+.debug[[k8s/statefulsets.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/statefulsets.md)]
+---
+
+class: pic
+
+.interstitial[![Image separating from the next part](https://gallant-turing-d0d520.netlify.com/containers/plastic-containers.JPG)]
+
+---
+
+name: toc-local-persistent-volumes
+class: title
+
+ Local Persistent Volumes
+
+.nav[
+[Previous part](#toc-stateful-sets)
+|
+[Back to table of contents](#toc-part-9)
+|
+[Next part](#toc-)
+]
+
+.debug[(automatically generated title slide)]
+
+---
+# Local Persistent Volumes
+
+- We want to run that Consul cluster *and* actually persist data
+
+- But we don't have a distributed storage system
+
+- We are going to use local volumes instead
+
+  (similar conceptually to `hostPath` volumes)
+
+- We can use local volumes without installing extra plugins
+
+- However, they are tied to a node
+
+- If that node goes down, the volume becomes unavailable
+
+.debug[[k8s/local-persistent-volumes.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/local-persistent-volumes.md)]
+---
+
+## With or without dynamic provisioning
+
+- We will deploy a Consul cluster *with* persistence
+
+- That cluster's StatefulSet will create PVCs
+
+- These PVCs will remain unbound¹, until we will create local volumes manually
+
+  (we will basically do the job of the dynamic provisioner)
+
+- Then, we will see how to automate that with a dynamic provisioner
+
+.footnote[¹Unbound = without an associated Persistent Volume.]
+
+.debug[[k8s/local-persistent-volumes.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/local-persistent-volumes.md)]
+---
+
+## If we have a dynamic provisioner ...
+
+- The labs in this section assume that we *do not* have a dynamic provisioner
+
+- If we do have one, we need to disable it
+
+.exercise[
+
+- Check if we have a dynamic provisioner:
+  ```bash
+  kubectl get storageclass
+  ```
+
+- If the output contains a line with `(default)`, run this command:
+  ```bash
+  kubectl annotate sc storageclass.kubernetes.io/is-default-class- --all
+  ```
+
+- Check again that it is no longer marked as `(default)`
+
+]
+
+.debug[[k8s/local-persistent-volumes.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/local-persistent-volumes.md)]
+---
+
+## Deploying Consul
+
+- Let's use a new manifest for our Consul cluster
+
+- The only differences between that file and the previous one are:
+
+  - `volumeClaimTemplate` defined in the Stateful Set spec
+
+  - the corresponding `volumeMounts` in the Pod spec
+
+.exercise[
+
+- Apply the persistent Consul YAML file:
+  ```bash
+  kubectl apply -f ~/container.training/k8s/consul-3.yaml
+  ```
+
+]
+
+.debug[[k8s/local-persistent-volumes.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/local-persistent-volumes.md)]
+---
+
+## Observing the situation
+
+- Let's look at Persistent Volume Claims and Pods
+
+.exercise[
+
+- Check that we now have an unbound Persistent Volume Claim:
+  ```bash
+  kubectl get pvc
+  ```
+
+- We don't have any Persistent Volume:
+  ```bash
+  kubectl get pv
+  ```
+
+- The Pod `consul-0` is not scheduled yet:
+  ```bash
+  kubectl get pods -o wide
+  ```
+
+]
+
+*Hint: leave these commands running with `-w` in different windows.*
+
+.debug[[k8s/local-persistent-volumes.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/local-persistent-volumes.md)]
+---
+
+## Explanations
+
+- In a Stateful Set, the Pods are started one by one
+
+- `consul-1` won't be created until `consul-0` is running
+
+- `consul-0` has a dependency on an unbound Persistent Volume Claim
+
+- The scheduler won't schedule the Pod until the PVC is bound
+
+  (because the PVC might be bound to a volume that is only available on a subset of nodes; for instance EBS are tied to an availability zone)
+
+.debug[[k8s/local-persistent-volumes.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/local-persistent-volumes.md)]
+---
+
+## Creating Persistent Volumes
+
+- Let's create 3 local directories (`/mnt/consul`) on node2, node3, node4
+
+- Then create 3 Persistent Volumes corresponding to these directories
+
+.exercise[
+
+- Create the local directories:
+  ```bash
+    for NODE in node2 node3 node4; do
+      ssh $NODE sudo mkdir -p /mnt/consul
+    done
+  ```
+
+- Create the PV objects:
+  ```bash
+  kubectl apply -f ~/container.training/k8s/volumes-for-consul.yaml
+  ```
+
+]
+
+.debug[[k8s/local-persistent-volumes.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/local-persistent-volumes.md)]
+---
+
+## Check our Consul cluster
+
+- The PVs that we created will be automatically matched with the PVCs
+
+- Once a PVC is bound, its pod can start normally
+
+- Once the pod `consul-0` has started, `consul-1` can be created, etc.
+
+- Eventually, our Consul cluster is up, and backend by "persistent" volumes
+
+.exercise[
+
+- Check that our Consul clusters has 3 members indeed:
+  ```bash
+  kubectl exec consul-0 -- consul members
+  ```
+
+]
+
+.debug[[k8s/local-persistent-volumes.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/local-persistent-volumes.md)]
+---
+
+## Devil is in the details (1/2)
+
+- The size of the Persistent Volumes is bogus
+
+  (it is used when matching PVs and PVCs together, but there is no actual quota or limit)
+
+.debug[[k8s/local-persistent-volumes.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/local-persistent-volumes.md)]
+---
+
+## Devil is in the details (2/2)
+
+- This specific example worked because we had exactly 1 free PV per node:
+
+  - if we had created multiple PVs per node ...
+
+  - we could have ended with two PVCs bound to PVs on the same node ...
+
+  - which would have required two pods to be on the same node ...
+
+  - which is forbidden by the anti-affinity constraints in the StatefulSet
+
+- To avoid that, we need to associated the PVs with a Storage Class that has:
+  ```yaml
+  volumeBindingMode: WaitForFirstConsumer
+  ```
+  (this means that a PVC will be bound to a PV only after being used by a Pod)
+
+- See [this blog post](https://kubernetes.io/blog/2018/04/13/local-persistent-volumes-beta/) for more details
+
+.debug[[k8s/local-persistent-volumes.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/local-persistent-volumes.md)]
+---
+
+## Bulk provisioning
+
+- It's not practical to manually create directories and PVs for each app
+
+- We *could* pre-provision a number of PVs across our fleet
+
+- We could even automate that with a Daemon Set:
+
+  - creating a number of directories on each node
+
+  - creating the corresponding PV objects
+
+- We also need to recycle volumes
+
+- ... This can quickly get out of hand
+
+.debug[[k8s/local-persistent-volumes.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/local-persistent-volumes.md)]
+---
+
+## Dynamic provisioning
+
+- We could also write our own provisioner, which would:
+
+  - watch the PVCs across all namespaces
+
+  - when a PVC is created, create a corresponding PV on a node
+
+- Or we could use one of the dynamic provisioners for local persistent volumes
+
+  (for instance the [Rancher local path provisioner](https://github.com/rancher/local-path-provisioner))
+
+.debug[[k8s/local-persistent-volumes.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/local-persistent-volumes.md)]
+---
+
+## Strategies for local persistent volumes
+
+- Remember, when a node goes down, the volumes on that node become unavailable
+
+- High availability will require another layer of replication
+
+  (like what we've just seen with Consul; or primary/secondary; etc)
+
+- Pre-provisioning PVs makes sense for machines with local storage
+
+  (e.g. cloud instance storage; or storage directly attached to a physical machine)
+
+- Dynamic provisioning makes sense for large number of applications
+
+  (when we can't or won't dedicate a whole disk to a volume)
+
+- It's possible to mix both (using distinct Storage Classes)
+
+???
+
+:EN:- Static vs dynamic volume provisioning
+:EN:- Example: local persistent volume provisioner
+:FR:- Création statique ou dynamique de volumes
+:FR:- Exemple : création de volumes locaux
+
+.debug[[k8s/local-persistent-volumes.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/local-persistent-volumes.md)]
+---
 class: title, self-paced
 
 Thank you!
@@ -13641,53 +14997,7 @@ That's all, folks! <br/> Questions?
 
 ![end](images/end.jpg)
 
-.debug[[shared/thankyou.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/shared/thankyou.md)]
----
-
-class: pic
-
-.interstitial[![Image separating from the next part](https://gallant-turing-d0d520.netlify.com/containers/containers-by-the-water.jpg)]
-
----
-
-name: toc-links-and-resources
-class: title
-
- Links and resources
-
-.nav[
-[Previous part](#toc-executing-batch-jobs)
-|
-[Back to table of contents](#toc-part-9)
-|
-[Next part](#toc-)
-]
-
-.debug[(automatically generated title slide)]
-
----
-# Links and resources
-
-All things Kubernetes:
-
-- [Kubernetes Community](https://kubernetes.io/community/) - Slack, Google Groups, meetups
-- [Kubernetes on StackOverflow](https://stackoverflow.com/questions/tagged/kubernetes)
-- [Play With Kubernetes Hands-On Labs](https://medium.com/@marcosnils/introducing-pwk-play-with-k8s-159fcfeb787b)
-
-All things Docker:
-
-- [Docker documentation](http://docs.docker.com/)
-- [Docker Hub](https://hub.docker.com)
-- [Docker on StackOverflow](https://stackoverflow.com/questions/tagged/docker)
-- [Play With Docker Hands-On Labs](http://training.play-with-docker.com/)
-
-Everything else:
-
-- [Local meetups](https://www.meetup.com/)
-
-.footnote[These slides (and future updates) are on → http://container.training/]
-
-.debug[[k8s/links.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/k8s/links.md)]</textarea>
+.debug[[shared/thankyou.md](https://github.com/denisgaudare/container.training.git/tree/main/slides/shared/thankyou.md)]</textarea>
     <script src="remark.min.js" type="text/javascript">
     </script>
     <script type="text/javascript">

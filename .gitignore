@@ -14,8 +14,8 @@ prepare-tf/stage2/.terraform*
 prepare-tf/stage2/terraform.*
 prepare-tf/stage2/externalips.*
 
-slides/*.yml.html
 slides/autopilot/state.yaml
+slides/*.html
 slides/index.html
 slides/past.html
 slides/slides.zip
